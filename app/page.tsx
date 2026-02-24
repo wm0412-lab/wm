@@ -115,6 +115,7 @@ const SPECIAL_EFFECT_POOL: string[] = [
   "적 처치 시 공격속도 증가 (Proc Passive)",
   "공격 시 공격속도 증가 (Proc Passive)",
   "내 체력이 90% 이상일 경우 마나 자연회복량 증가 (Proc Passive)",
+  "일반 공격 시 스킬 가속 증가(Proc Passive)",
   "공격 시 공격력 증가 (Proc Passive)",
   "공격 시 스킬 가속 증가 (Proc Passive)",
   "스킬 공격 시 마나 회복 (Proc Passive)",
