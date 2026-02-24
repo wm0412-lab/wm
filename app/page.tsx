@@ -112,6 +112,7 @@ const SPECIAL_EFFECT_POOL: string[] = [
   "피격 시 방어력 증가 (Proc Passive)",
   "피격 시 이동속도 증가 (Proc Passive)",
   "적 처치 시 체력 회복 (Proc Passive)",
+  "적 처치 시 공격속도 증가 (Proc Passive)",
   "공격 시 공격속도 증가 (Proc Passive)",
   "공격 시 공격력 증가 (Proc Passive)",
   "공격 시 스킬 가속 증가 (Proc Passive)",
