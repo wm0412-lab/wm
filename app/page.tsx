@@ -147,9 +147,13 @@ function clampSlot(slot: PassiveSlot) {
 
 function isValidConfig(cfg: ArmorConfig) {
   const p1 = cfg.passive1.length >= 1 && cfg.passive1.length <= 2;
-  const p2 = cfg.passive2.length >= 1 && cfg.passive2.length <= 2;
+  const p2 = cfg.passive2.length <= 2; // ✅ 0~2 허용
+
   const specialOk =
-    cfg.specialType === "NONE" ? cfg.specialEffect.trim() === "" : cfg.specialEffect.trim().length > 0;
+    cfg.specialType === "NONE"
+      ? true
+      : cfg.specialEffect.trim().length > 0;
+
   return p1 && p2 && specialOk;
 }
 
@@ -1249,15 +1253,15 @@ export default function Page() {
               }}
               onClick={saveCurrent}
               disabled={!canSave}
-              title={canSave ? "현재 선택 항목 저장" : "패시브1/2 최소 1개 + (특수 타입 있으면 특수효과 1개 필요)"}
+              title={canSave ? "현재 선택 항목 저장" : "패시브1 최소 1개 + (특수 타입 있으면 특수효과 1개 필요)"}
             >
               저장
             </button>
           </div>
 
           <DropZone
-            title="패시브 1 (1~2개)"
-            ok={draft.passive1.length >= 1 && draft.passive1.length <= 2}
+            title="패시브 2 (0~2개, 선택)"
+            ok={draft.passive2.length <= 2}
             slot={draft.passive1.map((s) => STATMOD_LABEL[s])}
             onDragOver={allowDrop}
             onDrop={(e) => dropTo("passive1", e)}
@@ -1268,8 +1272,8 @@ export default function Page() {
           />
 
           <DropZone
-            title="패시브 2 (1~2개)"
-            ok={draft.passive2.length >= 1 && draft.passive2.length <= 2}
+            title="패시브 2 (0~2개, 선택)"
+            ok={draft.passive2.length <= 2}
             slot={draft.passive2.map((s) => STATMOD_LABEL[s])}
             onDragOver={allowDrop}
             onDrop={(e) => dropTo("passive2", e)}
