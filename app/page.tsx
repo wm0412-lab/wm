@@ -1263,7 +1263,7 @@ export default function Page() {
           </div>
 
           <DropZone
-            title="패시브 2 (0~2개, 선택)"
+            title="패시브 1 (1~2개, 선택)"
             ok={draft.passive2.length <= 2}
             slot={draft.passive1.map((s) => STATMOD_LABEL[s])}
             onDragOver={allowDrop}
