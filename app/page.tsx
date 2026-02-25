@@ -130,10 +130,14 @@ const SPECIAL_EFFECT_POOL: string[] = [
   "짧은 시간 공격속도 증가 (Active)",
 ];
 
+/**
+ * ✅ 변경사항 #2
+ * - 2T 이상부터는 BASIC_CRAFT(기본제작) 제거
+ */
 const AVAILABILITY: Record<Tier, Record<Acquire, boolean>> = {
   1: { BASIC_CRAFT: true, LOOT_CRAFT: false, DUNGEON_CORE: false, BOSS_DROP: false },
-  2: { BASIC_CRAFT: true, LOOT_CRAFT: true, DUNGEON_CORE: true, BOSS_DROP: true },
-  3: { BASIC_CRAFT: true, LOOT_CRAFT: true, DUNGEON_CORE: true, BOSS_DROP: true },
+  2: { BASIC_CRAFT: false, LOOT_CRAFT: true, DUNGEON_CORE: true, BOSS_DROP: true },
+  3: { BASIC_CRAFT: false, LOOT_CRAFT: true, DUNGEON_CORE: true, BOSS_DROP: true },
 };
 
 const ACQUIRE_ORDER: Acquire[] = ["BASIC_CRAFT", "LOOT_CRAFT", "DUNGEON_CORE", "BOSS_DROP"];
@@ -561,7 +565,6 @@ export default function Page() {
 
       // also import equipped if exists (applied only on REPLACE, or when ids exist on MERGE)
       if (parsed?.equipped) {
-        // stash into window temp (simple)
         (window as any).__incoming_equipped__ = parsed.equipped;
       } else {
         (window as any).__incoming_equipped__ = null;
@@ -587,7 +590,6 @@ export default function Page() {
       setSavedIds(nextIds);
 
       if (incomingEquipped) {
-        // only keep ids that exist
         const sanitized: Equipped = { Armor: null, Helm: null, Gloves: null, Shoes: null };
         for (const p of PART_ORDER) {
           const id = incomingEquipped[p];
@@ -615,7 +617,6 @@ export default function Page() {
       return next;
     });
 
-    // merge equipped if incomingEquipped exists and ids will exist after merge
     if (incomingEquipped) {
       setEquipped((prev) => {
         const next: Equipped = { ...prev };
@@ -664,6 +665,25 @@ export default function Page() {
   const [fPart, setFPart] = useState<Part | "ALL">("ALL");
   const [fSpecialType, setFSpecialType] = useState<SpecialType | "ALL">("ALL");
   const [q, setQ] = useState("");
+
+  /**
+   * ✅ 변경사항 #2 (필터 UI에도 반영)
+   * - fTier가 2/3으로 고정되면 Acquire 옵션에서 BASIC_CRAFT 숨김
+   * - fTier가 ALL이면 전체 노출(= 기존 데이터 검색/관리 위해)
+   */
+  const filterAcquireOptions = useMemo(() => {
+    const all = Object.keys(ACQUIRE_LABEL) as Acquire[];
+    if (fTier === "ALL") return all;
+    return all.filter((a) => AVAILABILITY[fTier][a]);
+  }, [fTier]);
+
+  React.useEffect(() => {
+    // fTier가 2/3일 때 fAcquire가 BASIC_CRAFT로 남아있으면 ALL로 풀어줌
+    if (fTier !== "ALL" && fAcquire !== "ALL" && !AVAILABILITY[fTier][fAcquire]) {
+      setFAcquire("ALL");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fTier]);
 
   const filteredList = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -723,7 +743,7 @@ export default function Page() {
     return out;
   }, [equipped, store]);
 
-  // ✅ (수정) StatMod / Proc / Active 로 분리 + sources 제거
+  // ✅ StatMod / Proc / Active 로 분리 + sources 제거
   const equippedEffects = useMemo(() => {
     const statMap = new Map<string, number>(); // passive statmod
     const procMap = new Map<string, number>(); // special proc
@@ -737,11 +757,9 @@ export default function Page() {
       const cfg = equippedConfigs[p];
       if (!cfg) continue;
 
-      // Passive StatMod (passive1 + passive2)
       for (const s of cfg.passive1) add(statMap, STATMOD_LABEL[s]);
       for (const s of cfg.passive2) add(statMap, STATMOD_LABEL[s]);
 
-      // Special (Proc / Active)
       if (cfg.specialType === "PROC_PASSIVE" && cfg.specialEffect.trim()) {
         add(procMap, cfg.specialEffect.trim());
       }
@@ -791,7 +809,68 @@ export default function Page() {
   const mTag = MATERIAL_COLOR[material];
   const pTag = PART_COLOR[part];
 
-  const contentHeight = "calc(100vh - 360px)"; // a bit smaller because we inserted equipped panel
+  const contentHeight = "calc(100vh - 360px)";
+
+  /** ✅ 변경사항 #1: 필터 UI를 재사용 가능한 컴포넌트로 분리 (fullscreen에서도 동일하게 사용) */
+  const FiltersBar = (props: { compact?: boolean }) => {
+    return (
+      <div style={{ ...styles.filters, ...(props.compact ? styles.filtersCompact : null) }}>
+        <select
+          style={styles.select}
+          value={fTier}
+          onChange={(e) => setFTier(e.target.value === "ALL" ? "ALL" : (Number(e.target.value) as Tier))}
+        >
+          <option value="ALL">티어 전체</option>
+          <option value="1">1T</option>
+          <option value="2">2T</option>
+          <option value="3">3T</option>
+        </select>
+
+        <select style={styles.select} value={fAcquire} onChange={(e) => setFAcquire(e.target.value as any)}>
+          <option value="ALL">획득 전체</option>
+          {filterAcquireOptions.map((a) => (
+            <option key={a} value={a}>
+              {ACQUIRE_LABEL[a]}
+            </option>
+          ))}
+        </select>
+
+        <select style={styles.select} value={fPart} onChange={(e) => setFPart(e.target.value as any)}>
+          <option value="ALL">파츠 전체</option>
+          {PARTS.map((p) => (
+            <option key={p} value={p}>
+              {PART_LABEL[p]}
+            </option>
+          ))}
+        </select>
+
+        <select style={styles.select} value={fMaterial} onChange={(e) => setFMaterial(e.target.value as any)}>
+          <option value="ALL">재질 전체</option>
+          {MATERIALS.map((m) => (
+            <option key={m} value={m}>
+              {MATERIAL_LABEL[m]}
+            </option>
+          ))}
+        </select>
+
+        <select style={styles.select} value={fSpecialType} onChange={(e) => setFSpecialType(e.target.value as any)}>
+          <option value="ALL">특수 전체</option>
+          {SPECIAL_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {SPECIAL_LABEL[t]}
+            </option>
+          ))}
+        </select>
+
+        <input
+          style={styles.input}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="검색: 효과명/문구/재질/파츠/버전 등"
+        />
+      </div>
+    );
+  };
 
   /** ===== Right Content Renderer ===== */
   const RightContent = (props: { inFullscreen?: boolean; modeOverride?: ViewMode }) => {
@@ -807,7 +886,7 @@ export default function Page() {
 
     if (mode === "TABLE") {
       return (
-        <div style={{ ...styles.tableWrap, height: props.inFullscreen ? "calc(100vh - 220px)" : contentHeight }}>
+        <div style={{ ...styles.tableWrap, height: props.inFullscreen ? "calc(100vh - 260px)" : contentHeight }}>
           <table style={styles.table}>
             <thead>
               <tr>
@@ -835,7 +914,7 @@ export default function Page() {
                   <tr
                     key={cfg.id}
                     style={isExact ? styles.trActive : isSameCell ? styles.trSameCell : undefined}
-                    onDoubleClick={() => equipFromSelected(cfg)} // ✅ 더블클릭 장착
+                    onDoubleClick={() => equipFromSelected(cfg)}
                     title="더블클릭: 장착"
                   >
                     <Td>
@@ -896,13 +975,17 @@ export default function Page() {
               })}
             </tbody>
           </table>
+
+          {filteredList.length === 0 ? (
+            <div style={{ padding: 12, opacity: 0.7, fontSize: 13, lineHeight: 1.6 }}>필터 결과가 비었어. 필터를 풀어보라링.</div>
+          ) : null}
         </div>
       );
     }
 
-    // BOARD (same as before: shortened to keep this file manageable)
+    // BOARD
     return (
-      <div style={{ ...styles.boardWrap, height: props.inFullscreen ? "calc(100vh - 220px)" : contentHeight }}>
+      <div style={{ ...styles.boardWrap, height: props.inFullscreen ? "calc(100vh - 260px)" : contentHeight }}>
         <div style={{ opacity: 0.8, fontSize: 12, marginBottom: 10 }}>
           보드 모드(다이어그램). <b>표</b>에서 장착/삭제가 빠르다링. (원하면 보드 카드에도 장착 버튼 붙여줄게)
         </div>
@@ -928,7 +1011,12 @@ export default function Page() {
                     </div>
 
                     <div style={styles.boardTierBody}>
-                      {ACQUIRE_ORDER.filter((a) => (fAcquire === "ALL" ? true : a === fAcquire)).map((a) => {
+                      {ACQUIRE_ORDER.filter((a) => {
+                        // ✅ 변경사항 #2: 보드에서도 2T 이상이면 기본제작 컬럼 자체를 노출하지 않음
+                        if (t >= 2 && a === "BASIC_CRAFT") return false;
+                        if (fTier !== "ALL" && AVAILABILITY[t][a] === false) return false;
+                        return fAcquire === "ALL" ? true : a === fAcquire;
+                      }).map((a) => {
                         const acquireMap = tierMap?.[a];
                         if (!acquireMap) return null;
 
@@ -983,7 +1071,7 @@ export default function Page() {
                                                     ...styles.nodeCard,
                                                     ...(isExact ? styles.nodeCardActive : null),
                                                   }}
-                                                  onDoubleClick={() => equipFromSelected(cfg)} // ✅ 더블클릭 장착
+                                                  onDoubleClick={() => equipFromSelected(cfg)}
                                                   title="더블클릭: 장착"
                                                 >
                                                   <div style={styles.nodeHeader}>
@@ -1151,7 +1239,7 @@ export default function Page() {
         </div>
       ) : null}
 
-      {/* Fullscreen Modal */}
+      {/* ✅ Fullscreen Modal (필터 UI 포함) */}
       {fullscreen ? (
         <div style={styles.fullBackdrop} onMouseDown={() => setFullscreen(false)}>
           <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
@@ -1171,8 +1259,15 @@ export default function Page() {
               </div>
             </div>
 
+            {/* ✅ 변경사항 #1: 전체화면에서도 필터링 UI 노출 + 동일 state 적용 */}
             <div style={{ marginTop: 10 }}>
-              <RightContent inFullscreen modeOverride={fullscreenView} />
+              <div style={{ opacity: 0.75, fontSize: 12, marginBottom: 10 }}>
+                {filteredList.length} / {savedList.length}개
+              </div>
+              <FiltersBar compact />
+              <div style={{ marginTop: 10 }}>
+                <RightContent inFullscreen modeOverride={fullscreenView} />
+              </div>
             </div>
           </div>
         </div>
@@ -1236,7 +1331,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* ✅ Equipped Panel inserted between selection and the 3-column layout */}
+      {/* Equipped Panel */}
       <section style={{ ...styles.panel, marginTop: 14 }}>
         <div style={styles.equipHeader}>
           <div>
@@ -1477,7 +1572,9 @@ export default function Page() {
             </div>
 
             {draft.specialType !== "NONE" && !draft.specialEffect ? (
-              <div style={{ marginTop: 8, color: "#fb7185", fontWeight: 900, fontSize: 12 }}>❗ 특수 타입이 있으면 특수효과 1개가 필요해</div>
+              <div style={{ marginTop: 8, color: "#fb7185", fontWeight: 900, fontSize: 12 }}>
+                ❗ 특수 타입이 있으면 특수효과 1개가 필요해
+              </div>
             ) : null}
           </div>
 
@@ -1520,56 +1617,8 @@ export default function Page() {
             {filteredList.length} / {savedList.length}개
           </div>
 
-          <div style={styles.filters}>
-            <select
-              style={styles.select}
-              value={fTier}
-              onChange={(e) => setFTier(e.target.value === "ALL" ? "ALL" : (Number(e.target.value) as Tier))}
-            >
-              <option value="ALL">티어 전체</option>
-              <option value="1">1T</option>
-              <option value="2">2T</option>
-              <option value="3">3T</option>
-            </select>
-
-            <select style={styles.select} value={fAcquire} onChange={(e) => setFAcquire(e.target.value as any)}>
-              <option value="ALL">획득 전체</option>
-              {(Object.keys(ACQUIRE_LABEL) as Acquire[]).map((a) => (
-                <option key={a} value={a}>
-                  {ACQUIRE_LABEL[a]}
-                </option>
-              ))}
-            </select>
-
-            <select style={styles.select} value={fPart} onChange={(e) => setFPart(e.target.value as any)}>
-              <option value="ALL">파츠 전체</option>
-              {PARTS.map((p) => (
-                <option key={p} value={p}>
-                  {PART_LABEL[p]}
-                </option>
-              ))}
-            </select>
-
-            <select style={styles.select} value={fMaterial} onChange={(e) => setFMaterial(e.target.value as any)}>
-              <option value="ALL">재질 전체</option>
-              {MATERIALS.map((m) => (
-                <option key={m} value={m}>
-                  {MATERIAL_LABEL[m]}
-                </option>
-              ))}
-            </select>
-
-            <select style={styles.select} value={fSpecialType} onChange={(e) => setFSpecialType(e.target.value as any)}>
-              <option value="ALL">특수 전체</option>
-              {SPECIAL_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {SPECIAL_LABEL[t]}
-                </option>
-              ))}
-            </select>
-
-            <input style={styles.input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색: 효과명/문구/재질/파츠/버전 등" />
-          </div>
+          {/* ✅ 재사용 필터 */}
+          <FiltersBar />
 
           <RightContent />
 
@@ -1682,7 +1731,7 @@ function Td({ children, style }: { children: React.ReactNode; style?: React.CSSP
   return <td style={{ ...styles.td, ...style }}>{children}</td>;
 }
 
-// ✅ (추가) 합산 효과 그룹 렌더러
+// 합산 효과 그룹 렌더러
 function EffectGroup(props: { title: string; items: Array<{ label: string; count: number }> }) {
   const { title, items } = props;
 
@@ -1936,6 +1985,10 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "repeat(5, minmax(0, 1fr)) minmax(0, 1.5fr)",
     gap: 10,
     marginBottom: 12,
+  },
+  // ✅ fullscreen에서 좀 더 촘촘하게
+  filtersCompact: {
+    marginBottom: 10,
   },
 
   tableWrap: {
@@ -2220,7 +2273,6 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: "nowrap",
   },
 
-  // ✅ (추가) effect grouping styles
   effectGroup: {
     borderRadius: 14,
     border: "1px solid rgba(148,163,184,0.14)",
