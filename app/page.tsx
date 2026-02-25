@@ -131,8 +131,7 @@ const SPECIAL_EFFECT_POOL: string[] = [
 ];
 
 /**
- * ✅ 변경사항 #2
- * - 2T 이상부터는 BASIC_CRAFT(기본제작) 제거
+ * ✅ 2T 이상부터는 기본제작 카테고리 제거
  */
 const AVAILABILITY: Record<Tier, Record<Acquire, boolean>> = {
   1: { BASIC_CRAFT: true, LOOT_CRAFT: false, DUNGEON_CORE: false, BOSS_DROP: false },
@@ -270,19 +269,21 @@ function sanitizeConfig(raw: any): ArmorConfig | null {
 
 /** ===== Color Tags ===== */
 const MATERIAL_COLOR: Record<Material, { bg: string; fg: string; border: string }> = {
-  Plate: { bg: "rgba(59,130,246,0.18)", fg: "#93c5fd", border: "rgba(59,130,246,0.35)" },
-  Leather: { bg: "rgba(245,158,11,0.18)", fg: "#fcd34d", border: "rgba(245,158,11,0.35)" },
-  Cloth: { bg: "rgba(168,85,247,0.18)", fg: "#d8b4fe", border: "rgba(168,85,247,0.35)" },
+  Plate: { bg: "rgba(59,130,246,0.18)", fg: "#93c5fd", border: "rgba(59,130,246,0.85)" },
+  Leather: { bg: "rgba(245,158,11,0.18)", fg: "#fcd34d", border: "rgba(245,158,11,0.85)" },
+  Cloth: { bg: "rgba(168,85,247,0.18)", fg: "#d8b4fe", border: "rgba(168,85,247,0.85)" },
 };
 
 const PART_COLOR: Record<Part, { bg: string; fg: string; border: string }> = {
-  Armor: { bg: "rgba(16,185,129,0.18)", fg: "#6ee7b7", border: "rgba(16,185,129,0.35)" },
-  Helm: { bg: "rgba(236,72,153,0.18)", fg: "#f9a8d4", border: "rgba(236,72,153,0.35)" },
-  Gloves: { bg: "rgba(239,68,68,0.18)", fg: "#fca5a5", border: "rgba(239,68,68,0.35)" },
-  Shoes: { bg: "rgba(14,165,233,0.18)", fg: "#7dd3fc", border: "rgba(14,165,233,0.35)" },
+  Armor: { bg: "rgba(16,185,129,0.18)", fg: "#6ee7b7", border: "rgba(16,185,129,0.85)" },
+  Helm: { bg: "rgba(236,72,153,0.18)", fg: "#f9a8d4", border: "rgba(236,72,153,0.85)" },
+  Gloves: { bg: "rgba(239,68,68,0.18)", fg: "#fca5a5", border: "rgba(239,68,68,0.85)" },
+  Shoes: { bg: "rgba(14,165,233,0.18)", fg: "#7dd3fc", border: "rgba(14,165,233,0.85)" },
 };
 
 type Equipped = Record<Part, string | null>; // part -> uniqueId
+
+type DistStackMode = "PART" | "MATERIAL";
 
 export default function Page() {
   /** ===== Selection ===== */
@@ -296,7 +297,7 @@ export default function Page() {
   const [part, setPart] = useState<Part>("Armor");
 
   React.useEffect(() => {
-    if (!AVAILABILITY[tier][acquire]) setAcquire(acquireOptions[0] ?? "BASIC_CRAFT");
+    if (!AVAILABILITY[tier][acquire]) setAcquire(acquireOptions[0] ?? (tier === 1 ? "BASIC_CRAFT" : "LOOT_CRAFT"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tier]);
 
@@ -658,32 +659,13 @@ export default function Page() {
     return list;
   }, [savedIds, store]);
 
-  /** ===== Filters ===== */
+  /** ===== Filters (for saved panel + fullscreen) ===== */
   const [fTier, setFTier] = useState<Tier | "ALL">("ALL");
   const [fAcquire, setFAcquire] = useState<Acquire | "ALL">("ALL");
   const [fMaterial, setFMaterial] = useState<Material | "ALL">("ALL");
   const [fPart, setFPart] = useState<Part | "ALL">("ALL");
   const [fSpecialType, setFSpecialType] = useState<SpecialType | "ALL">("ALL");
   const [q, setQ] = useState("");
-
-  /**
-   * ✅ 변경사항 #2 (필터 UI에도 반영)
-   * - fTier가 2/3으로 고정되면 Acquire 옵션에서 BASIC_CRAFT 숨김
-   * - fTier가 ALL이면 전체 노출(= 기존 데이터 검색/관리 위해)
-   */
-  const filterAcquireOptions = useMemo(() => {
-    const all = Object.keys(ACQUIRE_LABEL) as Acquire[];
-    if (fTier === "ALL") return all;
-    return all.filter((a) => AVAILABILITY[fTier][a]);
-  }, [fTier]);
-
-  React.useEffect(() => {
-    // fTier가 2/3일 때 fAcquire가 BASIC_CRAFT로 남아있으면 ALL로 풀어줌
-    if (fTier !== "ALL" && fAcquire !== "ALL" && !AVAILABILITY[fTier][fAcquire]) {
-      setFAcquire("ALL");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fTier]);
 
   const filteredList = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -723,6 +705,7 @@ export default function Page() {
 
   /** ===== Equipped Simulator ===== */
   function equipFromSelected(cfg: ArmorConfig) {
+    if (!cfg?.id) return;
     setEquipped((prev) => ({ ...prev, [cfg.part]: cfg.id }));
     showToast(`${PART_LABEL[cfg.part]}에 장착됨`);
   }
@@ -745,9 +728,9 @@ export default function Page() {
 
   // ✅ StatMod / Proc / Active 로 분리 + sources 제거
   const equippedEffects = useMemo(() => {
-    const statMap = new Map<string, number>(); // passive statmod
-    const procMap = new Map<string, number>(); // special proc
-    const activeMap = new Map<string, number>(); // special active
+    const statMap = new Map<string, number>();
+    const procMap = new Map<string, number>();
+    const activeMap = new Map<string, number>();
 
     const add = (map: Map<string, number>, label: string) => {
       map.set(label, (map.get(label) ?? 0) + 1);
@@ -760,12 +743,8 @@ export default function Page() {
       for (const s of cfg.passive1) add(statMap, STATMOD_LABEL[s]);
       for (const s of cfg.passive2) add(statMap, STATMOD_LABEL[s]);
 
-      if (cfg.specialType === "PROC_PASSIVE" && cfg.specialEffect.trim()) {
-        add(procMap, cfg.specialEffect.trim());
-      }
-      if (cfg.specialType === "ACTIVE" && cfg.specialEffect.trim()) {
-        add(activeMap, cfg.specialEffect.trim());
-      }
+      if (cfg.specialType === "PROC_PASSIVE" && cfg.specialEffect.trim()) add(procMap, cfg.specialEffect.trim());
+      if (cfg.specialType === "ACTIVE" && cfg.specialEffect.trim()) add(activeMap, cfg.specialEffect.trim());
     }
 
     const toList = (map: Map<string, number>) =>
@@ -780,6 +759,80 @@ export default function Page() {
       totalCount: statMap.size + procMap.size + activeMap.size,
     };
   }, [equippedConfigs]);
+
+  /** ===== ✅ Acquire Distribution (Stacked Bar) ===== */
+  const [distShowTier, setDistShowTier] = useState(true);
+  const [distStackMode, setDistStackMode] = useState<DistStackMode>("PART");
+
+  type DistRow = {
+    acquire: Acquire;
+    tier: Tier | "ALL";
+    partCounts: Record<Part, number>;
+    materialCounts: Record<Material, number>;
+    total: number;
+  };
+
+  const distRows: DistRow[] = useMemo(() => {
+    // savedList 기반
+    const map = new Map<string, DistRow>();
+
+    const makeEmpty = (acq: Acquire, t: Tier | "ALL"): DistRow => ({
+      acquire: acq,
+      tier: t,
+      partCounts: { Armor: 0, Helm: 0, Gloves: 0, Shoes: 0 },
+      materialCounts: { Plate: 0, Leather: 0, Cloth: 0 },
+      total: 0,
+    });
+
+    for (const cfg of savedList) {
+      // distShowTier가 꺼져있으면 티어는 ALL로 합치기
+      const t: Tier | "ALL" = distShowTier ? cfg.tier : "ALL";
+      const key = `${cfg.acquire}|${t}`;
+      if (!map.has(key)) map.set(key, makeEmpty(cfg.acquire, t));
+      const row = map.get(key)!;
+      row.partCounts[cfg.part] += 1;
+      row.materialCounts[cfg.material] += 1;
+      row.total += 1;
+    }
+
+    const list = Array.from(map.values());
+
+    // 정렬: acquire order -> tier(ALL last) -> label
+    list.sort((a, b) => {
+      const ai = ACQUIRE_ORDER.indexOf(a.acquire);
+      const bi = ACQUIRE_ORDER.indexOf(b.acquire);
+      if (ai !== bi) return ai - bi;
+
+      const at = a.tier === "ALL" ? 999 : a.tier;
+      const bt = b.tier === "ALL" ? 999 : b.tier;
+      if (at !== bt) return at - bt;
+
+      return 0;
+    });
+
+    return list;
+  }, [savedList, distShowTier]);
+
+  const distMaxTotal = useMemo(() => {
+    let mx = 0;
+    for (const r of distRows) mx = Math.max(mx, r.total);
+    return mx;
+  }, [distRows]);
+
+  const distLegend = useMemo(() => {
+    if (distStackMode === "PART") {
+      return PART_ORDER.map((p) => ({
+        key: p,
+        label: PART_LABEL[p],
+        color: PART_COLOR[p].border,
+      }));
+    }
+    return MATERIAL_ORDER.map((m) => ({
+      key: m,
+      label: MATERIAL_LABEL[m],
+      color: MATERIAL_COLOR[m].border,
+    }));
+  }, [distStackMode]);
 
   /** ===== Board Model (unchanged) ===== */
   const boardModel = useMemo(() => {
@@ -811,66 +864,64 @@ export default function Page() {
 
   const contentHeight = "calc(100vh - 360px)";
 
-  /** ✅ 변경사항 #1: 필터 UI를 재사용 가능한 컴포넌트로 분리 (fullscreen에서도 동일하게 사용) */
-  const FiltersBar = (props: { compact?: boolean }) => {
-    return (
-      <div style={{ ...styles.filters, ...(props.compact ? styles.filtersCompact : null) }}>
-        <select
-          style={styles.select}
-          value={fTier}
-          onChange={(e) => setFTier(e.target.value === "ALL" ? "ALL" : (Number(e.target.value) as Tier))}
-        >
-          <option value="ALL">티어 전체</option>
-          <option value="1">1T</option>
-          <option value="2">2T</option>
-          <option value="3">3T</option>
-        </select>
+  /** ===== Filters UI (reused in normal + fullscreen) ===== */
+  const FiltersUI = () => (
+    <div style={styles.filters}>
+      <select
+        style={styles.select}
+        value={fTier}
+        onChange={(e) => setFTier(e.target.value === "ALL" ? "ALL" : (Number(e.target.value) as Tier))}
+      >
+        <option value="ALL">티어 전체</option>
+        <option value="1">1T</option>
+        <option value="2">2T</option>
+        <option value="3">3T</option>
+      </select>
 
-        <select style={styles.select} value={fAcquire} onChange={(e) => setFAcquire(e.target.value as any)}>
-          <option value="ALL">획득 전체</option>
-          {filterAcquireOptions.map((a) => (
-            <option key={a} value={a}>
-              {ACQUIRE_LABEL[a]}
-            </option>
-          ))}
-        </select>
+      <select style={styles.select} value={fAcquire} onChange={(e) => setFAcquire(e.target.value as any)}>
+        <option value="ALL">획득 전체</option>
+        {(Object.keys(ACQUIRE_LABEL) as Acquire[]).map((a) => (
+          <option key={a} value={a}>
+            {ACQUIRE_LABEL[a]}
+          </option>
+        ))}
+      </select>
 
-        <select style={styles.select} value={fPart} onChange={(e) => setFPart(e.target.value as any)}>
-          <option value="ALL">파츠 전체</option>
-          {PARTS.map((p) => (
-            <option key={p} value={p}>
-              {PART_LABEL[p]}
-            </option>
-          ))}
-        </select>
+      <select style={styles.select} value={fPart} onChange={(e) => setFPart(e.target.value as any)}>
+        <option value="ALL">파츠 전체</option>
+        {PARTS.map((p) => (
+          <option key={p} value={p}>
+            {PART_LABEL[p]}
+          </option>
+        ))}
+      </select>
 
-        <select style={styles.select} value={fMaterial} onChange={(e) => setFMaterial(e.target.value as any)}>
-          <option value="ALL">재질 전체</option>
-          {MATERIALS.map((m) => (
-            <option key={m} value={m}>
-              {MATERIAL_LABEL[m]}
-            </option>
-          ))}
-        </select>
+      <select style={styles.select} value={fMaterial} onChange={(e) => setFMaterial(e.target.value as any)}>
+        <option value="ALL">재질 전체</option>
+        {MATERIALS.map((m) => (
+          <option key={m} value={m}>
+            {MATERIAL_LABEL[m]}
+          </option>
+        ))}
+      </select>
 
-        <select style={styles.select} value={fSpecialType} onChange={(e) => setFSpecialType(e.target.value as any)}>
-          <option value="ALL">특수 전체</option>
-          {SPECIAL_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {SPECIAL_LABEL[t]}
-            </option>
-          ))}
-        </select>
+      <select style={styles.select} value={fSpecialType} onChange={(e) => setFSpecialType(e.target.value as any)}>
+        <option value="ALL">특수 전체</option>
+        {SPECIAL_TYPES.map((t) => (
+          <option key={t} value={t}>
+            {SPECIAL_LABEL[t]}
+          </option>
+        ))}
+      </select>
 
-        <input
-          style={styles.input}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="검색: 효과명/문구/재질/파츠/버전 등"
-        />
-      </div>
-    );
-  };
+      <input
+        style={styles.input}
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="검색: 효과명/문구/재질/파츠/버전 등"
+      />
+    </div>
+  );
 
   /** ===== Right Content Renderer ===== */
   const RightContent = (props: { inFullscreen?: boolean; modeOverride?: ViewMode }) => {
@@ -975,10 +1026,6 @@ export default function Page() {
               })}
             </tbody>
           </table>
-
-          {filteredList.length === 0 ? (
-            <div style={{ padding: 12, opacity: 0.7, fontSize: 13, lineHeight: 1.6 }}>필터 결과가 비었어. 필터를 풀어보라링.</div>
-          ) : null}
         </div>
       );
     }
@@ -987,7 +1034,7 @@ export default function Page() {
     return (
       <div style={{ ...styles.boardWrap, height: props.inFullscreen ? "calc(100vh - 260px)" : contentHeight }}>
         <div style={{ opacity: 0.8, fontSize: 12, marginBottom: 10 }}>
-          보드 모드(다이어그램). <b>표</b>에서 장착/삭제가 빠르다링. (원하면 보드 카드에도 장착 버튼 붙여줄게)
+          보드 모드(다이어그램). <b>표</b>에서 장착/삭제가 빠르다링.
         </div>
 
         {compareMode ? (
@@ -1011,12 +1058,7 @@ export default function Page() {
                     </div>
 
                     <div style={styles.boardTierBody}>
-                      {ACQUIRE_ORDER.filter((a) => {
-                        // ✅ 변경사항 #2: 보드에서도 2T 이상이면 기본제작 컬럼 자체를 노출하지 않음
-                        if (t >= 2 && a === "BASIC_CRAFT") return false;
-                        if (fTier !== "ALL" && AVAILABILITY[t][a] === false) return false;
-                        return fAcquire === "ALL" ? true : a === fAcquire;
-                      }).map((a) => {
+                      {ACQUIRE_ORDER.filter((a) => (fAcquire === "ALL" ? true : a === fAcquire)).map((a) => {
                         const acquireMap = tierMap?.[a];
                         if (!acquireMap) return null;
 
@@ -1239,7 +1281,7 @@ export default function Page() {
         </div>
       ) : null}
 
-      {/* ✅ Fullscreen Modal (필터 UI 포함) */}
+      {/* Fullscreen Modal (✅ filters included) */}
       {fullscreen ? (
         <div style={styles.fullBackdrop} onMouseDown={() => setFullscreen(false)}>
           <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
@@ -1259,12 +1301,9 @@ export default function Page() {
               </div>
             </div>
 
-            {/* ✅ 변경사항 #1: 전체화면에서도 필터링 UI 노출 + 동일 state 적용 */}
             <div style={{ marginTop: 10 }}>
-              <div style={{ opacity: 0.75, fontSize: 12, marginBottom: 10 }}>
-                {filteredList.length} / {savedList.length}개
-              </div>
-              <FiltersBar compact />
+              {/* ✅ fullscreen에서도 필터 보이게 */}
+              <FiltersUI />
               <div style={{ marginTop: 10 }}>
                 <RightContent inFullscreen modeOverride={fullscreenView} />
               </div>
@@ -1273,66 +1312,8 @@ export default function Page() {
         </div>
       ) : null}
 
-      {/* Selection */}
-      <section style={styles.card}>
-        <div style={styles.cardTitle}>선택</div>
-
-        <div style={styles.grid4}>
-          <Field label="티어">
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {[1, 2, 3].map((t) => (
-                <button key={t} style={pill(tier === t)} onClick={() => setTier(t as Tier)}>
-                  {t}T
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          <Field label="획득 방식">
-            <select value={acquire} onChange={(e) => setAcquire(e.target.value as Acquire)} style={styles.select}>
-              {acquireOptions.map((a) => (
-                <option key={a} value={a}>
-                  {ACQUIRE_LABEL[a]}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="재질">
-            <select value={material} onChange={(e) => setMaterial(e.target.value as Material)} style={styles.select}>
-              {MATERIALS.map((m) => (
-                <option key={m} value={m}>
-                  {MATERIAL_LABEL[m]} ({m})
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="파츠">
-            <select value={part} onChange={(e) => setPart(e.target.value as Part)} style={styles.select}>
-              {PARTS.map((p) => (
-                <option key={p} value={p}>
-                  {PART_LABEL[p]} ({p})
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <Tag label={`재질: ${MATERIAL_LABEL[material]}`} bg={mTag.bg} fg={mTag.fg} border={mTag.border} />
-          <Tag label={`파츠: ${PART_LABEL[part]}`} bg={pTag.bg} fg={pTag.fg} border={pTag.border} />
-          <div style={{ opacity: 0.7, fontSize: 13 }}>
-            Base ID: <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{baseId}</span>
-            {Array.from(savedIds).some((id) => id.startsWith(baseId + "|h")) ? (
-              <span style={{ marginLeft: 8, color: "#34d399", fontWeight: 900 }}>● 저장됨(버전)</span>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      {/* Equipped Panel */}
-      <section style={{ ...styles.panel, marginTop: 14 }}>
+      {/* ✅ UI 순서 1) 착용 장비 (맨 위) */}
+      <section style={{ ...styles.panel, marginTop: 10 }}>
         <div style={styles.equipHeader}>
           <div>
             <div style={{ fontWeight: 950 }}>착용 장비</div>
@@ -1438,7 +1419,171 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Main Layout */}
+      {/* ✅ UI 순서 2) 획득 방식 별 분포도 (스택 막대그래프) */}
+      <section style={{ ...styles.panel, marginTop: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontWeight: 950, fontSize: 16 }}>획득 방식 별 분포도(저장 데이터 기반)</div>
+            <div style={{ opacity: 0.75, fontSize: 12, marginTop: 6, lineHeight: 1.5 }}>
+              저장된 방어구({savedList.length}개)를 기준으로, 획득 방식{distShowTier ? "/티어" : ""}별{" "}
+              {distStackMode === "PART" ? "파츠" : "재질"} 분포를 <b>스택 막대그래프</b>로 본다링.
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
+            <label style={styles.checkPill}>
+              <input type="checkbox" checked={distShowTier} onChange={(e) => setDistShowTier(e.target.checked)} />
+              <span style={{ fontWeight: 950 }}>티어 분리</span>
+            </label>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button style={tabBtn(distStackMode === "PART")} onClick={() => setDistStackMode("PART")}>
+                파츠 스택
+              </button>
+              <button style={tabBtn(distStackMode === "MATERIAL")} onClick={() => setDistStackMode("MATERIAL")}>
+                재질 스택
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 950 }}>Legend</div>
+          {distLegend.map((it) => (
+            <div key={String(it.key)} style={styles.legendItem}>
+              <span style={{ ...styles.legendSwatch, background: it.color }} />
+              <span style={{ fontWeight: 900, fontSize: 12 }}>{it.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Bars */}
+        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+          {distRows.length === 0 ? (
+            <div style={{ opacity: 0.75, fontSize: 13, padding: 10 }}>아직 저장된 방어구가 없어. 저장하면 분포가 보인다링.</div>
+          ) : (
+            distRows.map((r) => {
+              const labelLeft = `${ACQUIRE_LABEL[r.acquire]}${distShowTier ? ` · ${r.tier === "ALL" ? "전체" : `${r.tier}T`}` : ""}`;
+              const denom = Math.max(1, r.total);
+              const barScale = distMaxTotal ? r.total / distMaxTotal : 0; // 길이(행별 total)도 비교되게
+
+              const segments =
+                distStackMode === "PART"
+                  ? PART_ORDER.map((p) => ({
+                      key: p,
+                      label: PART_LABEL[p],
+                      count: r.partCounts[p] || 0,
+                      color: PART_COLOR[p].border,
+                    }))
+                  : MATERIAL_ORDER.map((m) => ({
+                      key: m,
+                      label: MATERIAL_LABEL[m],
+                      count: r.materialCounts[m] || 0,
+                      color: MATERIAL_COLOR[m].border,
+                    }));
+
+              return (
+                <div key={`${r.acquire}_${r.tier}`} style={styles.barRow}>
+                  <div style={styles.barLeft}>
+                    <div style={{ fontWeight: 950 }}>{labelLeft}</div>
+                    <div style={{ opacity: 0.75, fontSize: 12, marginTop: 3 }}>합계 {r.total}</div>
+                  </div>
+
+                  <div style={styles.barRight}>
+                    <div style={styles.barTrack} title={`총 ${r.total}개`}>
+                      {/* 전체 길이 스케일 (행 total 비교) */}
+                      <div style={{ ...styles.barScaledWrap, width: `${Math.max(4, barScale * 100)}%` }}>
+                        {segments.map((s) => {
+                          const w = (s.count / denom) * 100;
+                          if (w <= 0) return null;
+                          return (
+                            <div
+                              key={String(s.key)}
+                              style={{ ...styles.barSeg, width: `${w}%`, background: s.color }}
+                              title={`${s.label}: ${s.count}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 숫자 라벨(짧게) */}
+                    <div style={styles.barNumbers}>
+                      {segments.map((s) => (
+                        <div key={String(s.key)} style={styles.barNumChip} title={s.label}>
+                          <span style={{ opacity: 0.85 }}>{s.label}</span>
+                          <span style={{ fontWeight: 950 }}>{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+
+      {/* ✅ UI 순서 3) 선택 (한 칸 아래로) */}
+      <section style={{ ...styles.card, marginTop: 14 }}>
+        <div style={styles.cardTitle}>선택</div>
+
+        <div style={styles.grid4}>
+          <Field label="티어">
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[1, 2, 3].map((t) => (
+                <button key={t} style={pill(tier === t)} onClick={() => setTier(t as Tier)}>
+                  {t}T
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="획득 방식">
+            <select value={acquire} onChange={(e) => setAcquire(e.target.value as Acquire)} style={styles.select}>
+              {acquireOptions.map((a) => (
+                <option key={a} value={a}>
+                  {ACQUIRE_LABEL[a]}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="재질">
+            <select value={material} onChange={(e) => setMaterial(e.target.value as Material)} style={styles.select}>
+              {MATERIALS.map((m) => (
+                <option key={m} value={m}>
+                  {MATERIAL_LABEL[m]} ({m})
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="파츠">
+            <select value={part} onChange={(e) => setPart(e.target.value as Part)} style={styles.select}>
+              {PARTS.map((p) => (
+                <option key={p} value={p}>
+                  {PART_LABEL[p]} ({p})
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <Tag label={`재질: ${MATERIAL_LABEL[material]}`} bg={mTag.bg} fg={mTag.fg} border={mTag.border} />
+          <Tag label={`파츠: ${PART_LABEL[part]}`} bg={pTag.bg} fg={pTag.fg} border={pTag.border} />
+          <div style={{ opacity: 0.7, fontSize: 13 }}>
+            Base ID: <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{baseId}</span>
+            {Array.from(savedIds).some((id) => id.startsWith(baseId + "|h")) ? (
+              <span style={{ marginLeft: 8, color: "#34d399", fontWeight: 900 }}>● 저장됨(버전)</span>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      {/* ✅ UI 순서 4) StatModified 풀 / 현재 선택 항목 설정 / 저장된 방어구 */}
       <section style={styles.layout3}>
         {/* Stat Pool */}
         <section style={styles.panel}>
@@ -1554,9 +1699,7 @@ export default function Page() {
               }}
             >
               {draft.specialType === "NONE" ? (
-                <div style={{ opacity: 0.65, fontSize: 13 }}>
-                  특수 타입이 “없음”이야. (드롭해도 자동으로 Proc Passive로 바뀜)
-                </div>
+                <div style={{ opacity: 0.65, fontSize: 13 }}>특수 타입이 “없음”이야. (드롭해도 자동으로 Proc Passive로 바뀜)</div>
               ) : draft.specialEffect ? (
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={styles.chip}>
@@ -1617,8 +1760,7 @@ export default function Page() {
             {filteredList.length} / {savedList.length}개
           </div>
 
-          {/* ✅ 재사용 필터 */}
-          <FiltersBar />
+          <FiltersUI />
 
           <RightContent />
 
@@ -1727,8 +1869,12 @@ function InlineList({ items }: { items: string[] }) {
 function Th({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return <th style={{ ...styles.th, ...style }}>{children}</th>;
 }
-function Td({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <td style={{ ...styles.td, ...style }}>{children}</td>;
+function Td({ children, style, colSpan }: { children: React.ReactNode; style?: React.CSSProperties; colSpan?: any }) {
+  return (
+    <td style={{ ...styles.td, ...style }} colSpan={colSpan}>
+      {children}
+    </td>
+  );
 }
 
 // 합산 효과 그룹 렌더러
@@ -1985,10 +2131,6 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "repeat(5, minmax(0, 1fr)) minmax(0, 1.5fr)",
     gap: 10,
     marginBottom: 12,
-  },
-  // ✅ fullscreen에서 좀 더 촘촘하게
-  filtersCompact: {
-    marginBottom: 10,
   },
 
   tableWrap: {
@@ -2313,5 +2455,87 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 950,
     fontSize: 12,
+  },
+
+  // ✅ distribution chart
+  checkPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "8px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(148,163,184,0.28)",
+    background: "rgba(2,6,23,0.22)",
+    cursor: "pointer",
+    userSelect: "none",
+  },
+  legendItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(148,163,184,0.20)",
+    background: "rgba(2,6,23,0.22)",
+  },
+  legendSwatch: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    boxShadow: "0 0 0 1px rgba(255,255,255,0.08) inset",
+  },
+  barRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(220px, 320px) 1fr",
+    gap: 12,
+    alignItems: "start",
+    padding: 12,
+    borderRadius: 14,
+    border: "1px solid rgba(148,163,184,0.16)",
+    background: "rgba(2,6,23,0.22)",
+  },
+  barLeft: {
+    minWidth: 0,
+    lineHeight: 1.3,
+  },
+  barRight: {
+    minWidth: 0,
+    display: "grid",
+    gap: 8,
+  },
+  barTrack: {
+    height: 18,
+    borderRadius: 999,
+    border: "1px solid rgba(148,163,184,0.18)",
+    background: "rgba(2,6,23,0.35)",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    padding: 2,
+  },
+  barScaledWrap: {
+    height: "100%",
+    borderRadius: 999,
+    overflow: "hidden",
+    display: "flex",
+  },
+  barSeg: {
+    height: "100%",
+  },
+  barNumbers: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  barNumChip: {
+    display: "inline-flex",
+    gap: 8,
+    alignItems: "baseline",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(148,163,184,0.18)",
+    background: "rgba(15,23,42,0.22)",
+    fontSize: 12,
+    whiteSpace: "nowrap",
   },
 };
