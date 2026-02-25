@@ -68,6 +68,13 @@ const PART_LABEL: Record<Part, string> = {
   Shoes: "신발",
 };
 
+const PART_ICON: Record<Part, string> = {
+  Armor: "🦺",
+  Helm: "🪖",
+  Gloves: "🧤",
+  Shoes: "👟",
+};
+
 const MATERIAL_LABEL: Record<Material, string> = {
   Plate: "판금",
   Leather: "가죽",
@@ -1186,6 +1193,54 @@ export default function Page() {
     );
   };
 
+  /** ===== RPG Slot Renderer ===== */
+  const renderRPGSlot = (p: Part) => {
+    const id = equipped[p];
+    const cfg = id ? store[id] : null;
+    const accentColor = PART_COLOR[p].border;
+
+    if (!cfg) {
+      return (
+        <div style={styles.rpgSlotEmpty}>
+          <span style={{ fontSize: 28, opacity: 0.35 }}>{PART_ICON[p]}</span>
+          <Tag label={PART_LABEL[p]} bg={PART_COLOR[p].bg} fg={PART_COLOR[p].fg} border={PART_COLOR[p].border} />
+          <span style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>빈 슬롯</span>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ ...styles.rpgSlotCard, borderColor: accentColor, boxShadow: `0 0 16px ${accentColor}28, 0 2px 10px rgba(0,0,0,0.6)` }}>
+        {/* Header: 아이콘 + 파츠명 + 버전 + 해제 버튼 (한 줄) */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, overflow: "hidden" }}>
+            <span style={{ fontSize: 13, flexShrink: 0 }}>{PART_ICON[p]}</span>
+            <Tag label={PART_LABEL[p]} bg={PART_COLOR[p].bg} fg={PART_COLOR[p].fg} border={PART_COLOR[p].border} />
+            <span style={{ ...styles.verPill, fontSize: 10, flexShrink: 0 }}>v{getVerFromUniqueId(cfg.id) || "-"}</span>
+          </div>
+          <button style={styles.smallBtnDanger} onClick={() => unequip(p)}>해제</button>
+        </div>
+        {/* 요약: 티어·획득·재질 */}
+        <div style={{ fontSize: 11, opacity: 0.65, lineHeight: 1.3 }}>
+          {cfg.tier}T · {ACQUIRE_LABEL[cfg.acquire]} · {MATERIAL_LABEL[cfg.material]}
+        </div>
+        {/* 패시브/스페셜 (레이블 없이 인라인) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          <InlineList items={cfg.passive1.map((s) => STATMOD_LABEL[s])} />
+          {cfg.passive2.length > 0 && <InlineList items={cfg.passive2.map((s) => STATMOD_LABEL[s])} />}
+          {cfg.specialType !== "NONE" && (
+            <div style={{ ...styles.specialBox, fontSize: 11, padding: "3px 8px" }}>{cfg.specialEffect}</div>
+          )}
+        </div>
+        {/* 액션 버튼 */}
+        <div style={{ display: "flex", gap: 5 }}>
+          <button style={styles.smallBtn} onClick={() => jumpTo(cfg)}>편집</button>
+          <button style={styles.smallBtnDanger} onClick={() => deleteRow(cfg.id)}>삭제</button>
+        </div>
+      </div>
+    );
+  };
+
   /** ===== UI ===== */
   return (
     <main style={styles.page}>
@@ -1333,70 +1388,135 @@ export default function Page() {
         </div>
 
         <div style={styles.equipGrid}>
-          {/* Left: slots */}
-          <div style={styles.slotCol}>
-            {PART_ORDER.map((p) => {
-              const id = equipped[p];
-              const cfg = id ? store[id] : null;
+          {/* Left: Character Body Map */}
+          <div style={styles.charMapPanel}>
+            {/* Atmospheric radial glow */}
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: 14, zIndex: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse 65% 55% at 50% 40%, rgba(185,140,40,0.14) 0%, rgba(120,60,10,0.06) 50%, transparent 80%)",
+            }} />
 
-              return (
-                <div key={`slot_${p}`} style={styles.slotBox}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                    <Tag label={PART_LABEL[p]} bg={PART_COLOR[p].bg} fg={PART_COLOR[p].fg} border={PART_COLOR[p].border} />
-                    <button style={styles.smallBtnDanger} onClick={() => unequip(p)} disabled={!id} title="해제">
-                      해제
-                    </button>
-                  </div>
+            {/* 3-column slot grid with SVG character in center */}
+            <div style={styles.charSlotGrid}>
+              {/* Top center: Helm */}
+              <div style={{ gridArea: "helm" }}>{renderRPGSlot("Helm")}</div>
 
-                  {cfg ? (
-                    <div style={{ marginTop: 10 }}>
-                      <div style={styles.slotTitle}>
-                        {cfg.tier}T · {ACQUIRE_LABEL[cfg.acquire]} · {MATERIAL_LABEL[cfg.material]}{" "}
-                        <span style={styles.verPill}>v{getVerFromUniqueId(cfg.id) || "-"}</span>
-                      </div>
+              {/* Left: Gloves */}
+              <div style={{ gridArea: "gloves" }}>{renderRPGSlot("Gloves")}</div>
 
-                      <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
-                        <div>
-                          <div style={styles.slotSection}>Passive 1</div>
-                          <InlineList items={cfg.passive1.map((s) => STATMOD_LABEL[s])} />
-                        </div>
+              {/* Center: Character SVG */}
+              <div style={{ gridArea: "char", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg viewBox="0 0 120 260" style={{ width: 110, height: "auto" }} aria-hidden="true">
+                  <defs>
+                    <filter id="rpgGlow" x="-40%" y="-40%" width="180%" height="180%">
+                      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
 
-                        <div>
-                          <div style={styles.slotSection}>Passive 2</div>
-                          {cfg.passive2.length ? (
-                            <InlineList items={cfg.passive2.map((s) => STATMOD_LABEL[s])} />
-                          ) : (
-                            <div style={{ opacity: 0.6, fontSize: 12 }}>-</div>
-                          )}
-                        </div>
+                  {/* HEAD / HELM */}
+                  <circle cx="60" cy="28" r="21"
+                    fill={equippedConfigs["Helm"] ? `${PART_COLOR["Helm"].border}35` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Helm"].border}
+                    strokeWidth={equippedConfigs["Helm"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Helm"] ? "0.95" : "0.22"}
+                    filter={equippedConfigs["Helm"] ? "url(#rpgGlow)" : undefined}
+                  />
+                  <line x1="44" y1="30" x2="76" y2="30" stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(148,163,184,0.14)"} strokeWidth="1" strokeOpacity="0.55"/>
 
-                        <div>
-                          <div style={styles.slotSection}>Special</div>
-                          {cfg.specialType === "NONE" ? (
-                            <div style={{ opacity: 0.6, fontSize: 12 }}>-</div>
-                          ) : (
-                            <div style={styles.specialBox}>{cfg.specialEffect}</div>
-                          )}
-                        </div>
+                  {/* NECK */}
+                  <rect x="54" y="49" width="12" height="12" rx="2"
+                    fill="rgba(148,163,184,0.08)" stroke="rgba(148,163,184,0.18)" strokeWidth="0.8"/>
 
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <button style={styles.smallBtn} onClick={() => jumpTo(cfg)}>
-                            편집으로 이동
-                          </button>
-                          <button style={styles.smallBtnDanger} onClick={() => deleteRow(cfg.id)}>
-                            삭제
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={styles.slotEmpty}>
-                      비어있음 — 표/보드에서 이 파츠 장비를 <b>장착</b>해줘
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  {/* SHOULDERS / ARMOR */}
+                  <rect x="16" y="58" width="88" height="12" rx="6"
+                    fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}25` : "rgba(148,163,184,0.07)"}
+                    stroke={PART_COLOR["Armor"].border}
+                    strokeWidth={equippedConfigs["Armor"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Armor"] ? "0.75" : "0.18"}
+                  />
+
+                  {/* TORSO / ARMOR */}
+                  <rect x="28" y="70" width="64" height="74" rx="6"
+                    fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}30` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Armor"].border}
+                    strokeWidth={equippedConfigs["Armor"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Armor"] ? "0.95" : "0.22"}
+                    filter={equippedConfigs["Armor"] ? "url(#rpgGlow)" : undefined}
+                  />
+                  <line x1="60" y1="76" x2="60" y2="134" stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(148,163,184,0.10)"} strokeWidth="1" strokeOpacity="0.45"/>
+                  <path d="M 42 92 Q 60 100 78 92" stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(148,163,184,0.10)"} strokeWidth="1" strokeOpacity="0.45" fill="none"/>
+
+                  {/* LEFT ARM / GLOVES */}
+                  <rect x="12" y="68" width="16" height="54" rx="5"
+                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}30` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Gloves"].border}
+                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
+                    filter={equippedConfigs["Gloves"] ? "url(#rpgGlow)" : undefined}
+                  />
+                  <rect x="8" y="122" width="20" height="22" rx="4"
+                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}40` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Gloves"].border}
+                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
+                  />
+
+                  {/* RIGHT ARM / GLOVES */}
+                  <rect x="92" y="68" width="16" height="54" rx="5"
+                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}30` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Gloves"].border}
+                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
+                  />
+                  <rect x="92" y="122" width="20" height="22" rx="4"
+                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}40` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Gloves"].border}
+                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
+                  />
+
+                  {/* WAIST / BELT */}
+                  <rect x="30" y="144" width="60" height="14" rx="4"
+                    fill="rgba(148,163,184,0.07)" stroke="rgba(148,163,184,0.16)" strokeWidth="0.8"/>
+
+                  {/* LEFT LEG / SHOES */}
+                  <rect x="32" y="158" width="22" height="76" rx="5"
+                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Shoes"].border}
+                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Shoes"] ? "0.9" : "0.22"}
+                    filter={equippedConfigs["Shoes"] ? "url(#rpgGlow)" : undefined}
+                  />
+                  <rect x="26" y="230" width="30" height="16" rx="4"
+                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}40` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Shoes"].border}
+                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Shoes"] ? "0.95" : "0.22"}
+                  />
+
+                  {/* RIGHT LEG / SHOES */}
+                  <rect x="66" y="158" width="22" height="76" rx="5"
+                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Shoes"].border}
+                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Shoes"] ? "0.9" : "0.22"}
+                  />
+                  <rect x="64" y="230" width="30" height="16" rx="4"
+                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}40` : "rgba(148,163,184,0.08)"}
+                    stroke={PART_COLOR["Shoes"].border}
+                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
+                    strokeOpacity={equippedConfigs["Shoes"] ? "0.95" : "0.22"}
+                  />
+                </svg>
+              </div>
+
+              {/* Right: Armor */}
+              <div style={{ gridArea: "armor" }}>{renderRPGSlot("Armor")}</div>
+
+              {/* Bottom center: Shoes */}
+              <div style={{ gridArea: "shoes" }}>{renderRPGSlot("Shoes")}</div>
+            </div>
           </div>
 
           {/* Right: aggregated effects */}
@@ -1453,7 +1573,7 @@ export default function Page() {
           {distLegend.map((it) => (
             <div key={String(it.key)} style={styles.legendItem}>
               <span style={{ ...styles.legendSwatch, background: it.color }} />
-              <span style={{ fontWeight: 900, fontSize: 12 }}>{it.label}</span>
+              <span style={{ fontWeight: 900, fontSize: 13 }}>{it.label}</span>
             </div>
           ))}
         </div>
@@ -1486,8 +1606,11 @@ export default function Page() {
               return (
                 <div key={`${r.acquire}_${r.tier}`} style={styles.barRow}>
                   <div style={styles.barLeft}>
-                    <div style={{ fontWeight: 950 }}>{labelLeft}</div>
-                    <div style={{ opacity: 0.75, fontSize: 12, marginTop: 3 }}>합계 {r.total}</div>
+                    <div style={{ fontWeight: 950, fontSize: 14 }}>{labelLeft}</div>
+                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ opacity: 0.55, fontSize: 11 }}>합계</span>
+                      <span style={{ fontWeight: 950, fontSize: 15, color: "#e2e8f0" }}>{r.total}</span>
+                    </div>
                   </div>
 
                   <div style={styles.barRight}>
@@ -1508,12 +1631,13 @@ export default function Page() {
                       </div>
                     </div>
 
-                    {/* 숫자 라벨(짧게) */}
+                    {/* 숫자 라벨 */}
                     <div style={styles.barNumbers}>
-                      {segments.map((s) => (
-                        <div key={String(s.key)} style={styles.barNumChip} title={s.label}>
+                      {segments.filter((s) => s.count > 0).map((s) => (
+                        <div key={String(s.key)} style={{ ...styles.barNumChip, borderLeft: `3px solid ${s.color}` }} title={s.label}>
                           <span style={{ opacity: 0.85 }}>{s.label}</span>
                           <span style={{ fontWeight: 950 }}>{s.count}</span>
+                          <span style={{ opacity: 0.55, fontSize: 11 }}>({Math.round((s.count / denom) * 100)}%)</span>
                         </div>
                       ))}
                     </div>
@@ -1938,8 +2062,8 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     padding: 20,
     fontFamily: "system-ui",
-    color: "#e5e7eb",
-    background: "radial-gradient(1200px 600px at 20% 0%, rgba(59,130,246,0.15), transparent 60%), #0b0f14",
+    color: "#f0e2c0",
+    background: "radial-gradient(1400px 700px at 25% -5%, rgba(185,130,40,0.18) 0%, transparent 55%), radial-gradient(800px 500px at 80% 90%, rgba(140,80,20,0.10) 0%, transparent 60%), #0d0a06",
     minHeight: "100vh",
   },
   header: {
@@ -1950,8 +2074,8 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
     marginBottom: 14,
   },
-  h1: { fontSize: 24, fontWeight: 950, letterSpacing: -0.2 },
-  sub: { marginTop: 6, opacity: 0.8, lineHeight: 1.4 },
+  h1: { fontSize: 24, fontWeight: 950, letterSpacing: -0.2, color: "#e8c87a" },
+  sub: { marginTop: 6, opacity: 0.75, lineHeight: 1.4, color: "#d4b88a" },
 
   toast: {
     position: "fixed",
@@ -1959,12 +2083,12 @@ const styles: Record<string, React.CSSProperties> = {
     bottom: 18,
     padding: "10px 12px",
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(2,6,23,0.88)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.40)",
+    background: "rgba(18,11,3,0.95)",
+    color: "#f0e2c0",
     fontWeight: 900,
     zIndex: 50,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(185,148,55,0.08) inset",
   },
 
   modalBackdrop: {
@@ -1980,20 +2104,20 @@ const styles: Record<string, React.CSSProperties> = {
   modal: {
     width: "min(560px, 100%)",
     borderRadius: 18,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(2,6,23,0.95)",
+    border: "1px solid rgba(185,148,55,0.35)",
+    background: "rgba(16,10,3,0.97)",
     padding: 16,
-    boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(185,148,55,0.06) inset",
   },
 
   card: {
     borderRadius: 16,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(2,6,23,0.35)",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(22,13,4,0.72)",
     padding: 16,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(185,148,55,0.07)",
   },
-  cardTitle: { fontWeight: 900, marginBottom: 12 },
+  cardTitle: { fontWeight: 900, marginBottom: 12, color: "#e8c87a" },
 
   grid4: {
     display: "grid",
@@ -2005,18 +2129,18 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(12,7,2,0.65)",
+    color: "#f0e2c0",
     outline: "none",
   },
   input: {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(12,7,2,0.65)",
+    color: "#f0e2c0",
     outline: "none",
   },
 
@@ -2030,13 +2154,13 @@ const styles: Record<string, React.CSSProperties> = {
 
   panel: {
     borderRadius: 16,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(2,6,23,0.35)",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(22,13,4,0.72)",
     padding: 16,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(185,148,55,0.07)",
     minWidth: 0,
   },
-  panelTitle: { fontWeight: 950, marginBottom: 8 },
+  panelTitle: { fontWeight: 950, marginBottom: 8, color: "#e8c87a" },
 
   pool: {
     display: "grid",
@@ -2048,32 +2172,33 @@ const styles: Record<string, React.CSSProperties> = {
   },
   poolItem: {
     borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(15,23,42,0.35)",
+    border: "1px solid rgba(185,148,55,0.22)",
+    background: "rgba(20,12,3,0.55)",
     padding: "10px 12px",
     cursor: "grab",
     fontWeight: 800,
     lineHeight: 1.25,
     whiteSpace: "normal",
     wordBreak: "break-word",
+    color: "#d4c49a",
   },
   hint: { marginTop: 10, opacity: 0.75, fontSize: 13, lineHeight: 1.5 },
 
   btn: {
     padding: "10px 12px",
     borderRadius: 14,
-    border: "1px solid rgba(226,232,240,0.55)",
-    background: "rgba(226,232,240,0.12)",
-    color: "#e2e8f0",
+    border: "1px solid rgba(185,148,55,0.55)",
+    background: "rgba(185,148,55,0.12)",
+    color: "#f0e2c0",
     cursor: "pointer",
     fontWeight: 900,
   },
   btnSecondary: {
     padding: "10px 12px",
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.25)",
-    color: "#cbd5e1",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(12,7,2,0.45)",
+    color: "#d4c49a",
     cursor: "pointer",
     fontWeight: 900,
   },
@@ -2093,9 +2218,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     padding: "8px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.25)",
-    background: "rgba(2,6,23,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(18,11,3,0.55)",
+    color: "#f0e2c0",
     fontWeight: 850,
     maxWidth: "100%",
   },
@@ -2104,9 +2229,9 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     padding: "6px 8px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "rgba(15,23,42,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.22)",
+    background: "rgba(18,11,3,0.50)",
+    color: "#e8d5b0",
     fontWeight: 800,
     fontSize: 12,
     lineHeight: 1.2,
@@ -2261,9 +2386,9 @@ const styles: Record<string, React.CSSProperties> = {
   verPill: {
     padding: "6px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(15,23,42,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(18,11,3,0.55)",
+    color: "#d4c49a",
     fontWeight: 950,
     fontSize: 12,
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -2340,6 +2465,49 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   // equip
+  charMapPanel: {
+    position: "relative" as "relative",
+    borderRadius: 14,
+    border: "1px solid rgba(185,148,55,0.32)",
+    background: "rgba(16,9,2,0.80)",
+    padding: 14,
+    overflow: "hidden" as "hidden",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(185,148,55,0.10)",
+  },
+  charSlotGrid: {
+    display: "grid",
+    gridTemplateAreas: '". helm ." "gloves char armor" ". shoes ."',
+    gridTemplateColumns: "1fr 120px 1fr",
+    gridTemplateRows: "auto auto auto",
+    gap: 12,
+    alignItems: "center",
+    position: "relative" as "relative",
+    zIndex: 1,
+  },
+  rpgSlotCard: {
+    borderRadius: 10,
+    border: "1px solid",
+    borderColor: "rgba(185,148,55,0.30)",
+    background: "rgba(12,7,2,0.82)",
+    padding: "9px 11px",
+    display: "flex" as "flex",
+    flexDirection: "column" as "column",
+    gap: 6,
+    backdropFilter: "blur(4px)",
+  },
+  rpgSlotEmpty: {
+    borderRadius: 10,
+    border: "1.5px dashed rgba(185,148,55,0.22)",
+    background: "rgba(12,7,2,0.40)",
+    padding: "18px 10px",
+    display: "flex" as "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center" as "center",
+    justifyContent: "center" as "center",
+    gap: 8,
+    textAlign: "center" as "center",
+    minHeight: 110,
+  },
   equipHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -2388,8 +2556,8 @@ const styles: Record<string, React.CSSProperties> = {
 
   effectCol: {
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.30)",
+    border: "1px solid rgba(185,148,55,0.25)",
+    background: "rgba(20,12,4,0.70)",
     padding: 12,
     minHeight: 200,
     overflow: "hidden",
@@ -2401,8 +2569,8 @@ const styles: Record<string, React.CSSProperties> = {
   effectList: { overflow: "auto", paddingRight: 6, display: "grid", gap: 10 },
   effectItem: {
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.16)",
-    background: "rgba(15,23,42,0.24)",
+    border: "1px solid rgba(185,148,55,0.18)",
+    background: "rgba(18,11,3,0.50)",
     padding: 12,
   },
   countPill: {
@@ -2433,9 +2601,9 @@ const styles: Record<string, React.CSSProperties> = {
   smallBtn: {
     padding: "8px 10px",
     borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.22)",
-    color: "#cbd5e1",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(18,11,3,0.40)",
+    color: "#d4c49a",
     cursor: "pointer",
     fontWeight: 950,
     fontSize: 12,
@@ -2464,8 +2632,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
     padding: "8px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.22)",
+    border: "1px solid rgba(185,148,55,0.28)",
+    background: "rgba(18,11,3,0.40)",
     cursor: "pointer",
     userSelect: "none",
   },
@@ -2475,24 +2643,25 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
     padding: "6px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.20)",
-    background: "rgba(2,6,23,0.22)",
+    border: "1px solid rgba(185,148,55,0.22)",
+    background: "rgba(18,11,3,0.50)",
   },
   legendSwatch: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    boxShadow: "0 0 0 1px rgba(255,255,255,0.08) inset",
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+    flexShrink: 0,
+    boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset",
   },
   barRow: {
     display: "grid",
-    gridTemplateColumns: "minmax(220px, 320px) 1fr",
-    gap: 12,
-    alignItems: "start",
-    padding: 12,
+    gridTemplateColumns: "minmax(180px, 260px) 1fr",
+    gap: 16,
+    alignItems: "center",
+    padding: "14px 16px",
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.16)",
-    background: "rgba(2,6,23,0.22)",
+    border: "1px solid rgba(185,148,55,0.22)",
+    background: "rgba(20,12,4,0.60)",
   },
   barLeft: {
     minWidth: 0,
@@ -2504,37 +2673,40 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
   },
   barTrack: {
-    height: 18,
-    borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.35)",
+    height: 30,
+    borderRadius: 8,
+    border: "1px solid rgba(185,148,55,0.20)",
+    background: "rgba(10,6,1,0.70)",
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
-    padding: 2,
+    padding: 3,
   },
   barScaledWrap: {
     height: "100%",
-    borderRadius: 999,
+    borderRadius: 6,
     overflow: "hidden",
     display: "flex",
+    gap: 2,
   },
   barSeg: {
     height: "100%",
+    minWidth: 4,
+    transition: "width 0.2s ease",
   },
   barNumbers: {
     display: "flex",
-    gap: 8,
+    gap: 6,
     flexWrap: "wrap",
   },
   barNumChip: {
     display: "inline-flex",
-    gap: 8,
-    alignItems: "baseline",
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(15,23,42,0.22)",
+    gap: 6,
+    alignItems: "center",
+    padding: "5px 10px 5px 8px",
+    borderRadius: 8,
+    border: "1px solid rgba(185,148,55,0.18)",
+    background: "rgba(18,11,3,0.55)",
     fontSize: 12,
     whiteSpace: "nowrap",
   },
