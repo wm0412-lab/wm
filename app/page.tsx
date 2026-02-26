@@ -1404,110 +1404,200 @@ export default function Page() {
               {/* Left: Gloves */}
               <div style={{ gridArea: "gloves" }}>{renderRPGSlot("Gloves")}</div>
 
-              {/* Center: Character SVG */}
+              {/* Center: Character SVG — Lineage-style knight */}
               <div style={{ gridArea: "char", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg viewBox="0 0 120 260" style={{ width: 110, height: "auto" }} aria-hidden="true">
+                <svg viewBox="0 0 180 330" style={{ width: 140, height: "auto" }} aria-hidden="true">
                   <defs>
-                    <filter id="rpgGlow" x="-40%" y="-40%" width="180%" height="180%">
-                      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                    <filter id="rpgGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="4" result="blur"/>
                       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                     </filter>
+                    <filter id="softGlow" x="-35%" y="-35%" width="170%" height="170%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <radialGradient id="groundGlow" cx="50%" cy="100%" r="50%">
+                      <stop offset="0%" stopColor="rgba(185,140,40,0.25)"/>
+                      <stop offset="100%" stopColor="rgba(185,140,40,0)"/>
+                    </radialGradient>
                   </defs>
 
-                  {/* HEAD / HELM */}
-                  <circle cx="60" cy="28" r="21"
-                    fill={equippedConfigs["Helm"] ? `${PART_COLOR["Helm"].border}35` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Helm"].border}
-                    strokeWidth={equippedConfigs["Helm"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Helm"] ? "0.95" : "0.22"}
-                    filter={equippedConfigs["Helm"] ? "url(#rpgGlow)" : undefined}
-                  />
-                  <line x1="44" y1="30" x2="76" y2="30" stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(148,163,184,0.14)"} strokeWidth="1" strokeOpacity="0.55"/>
+                  {/* Ground glow */}
+                  <ellipse cx="90" cy="322" rx="58" ry="10" fill="url(#groundGlow)"/>
 
-                  {/* NECK */}
-                  <rect x="54" y="49" width="12" height="12" rx="2"
-                    fill="rgba(148,163,184,0.08)" stroke="rgba(148,163,184,0.18)" strokeWidth="0.8"/>
+                  {/* CAPE behind body */}
+                  <path d="M 65,68 C 45,90 22,132 18,188 C 14,232 24,276 40,308 C 54,311 62,296 60,270 C 57,240 51,200 56,160 C 61,128 70,104 73,80 Z"
+                    fill="rgba(30,10,3,0.60)" stroke="rgba(120,70,25,0.32)" strokeWidth="1"/>
+                  <path d="M 115,68 C 135,90 158,132 162,188 C 166,232 156,276 140,308 C 126,311 118,296 120,270 C 123,240 129,200 124,160 C 119,128 110,104 107,80 Z"
+                    fill="rgba(30,10,3,0.60)" stroke="rgba(120,70,25,0.32)" strokeWidth="1"/>
 
-                  {/* SHOULDERS / ARMOR */}
-                  <rect x="16" y="58" width="88" height="12" rx="6"
-                    fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}25` : "rgba(148,163,184,0.07)"}
-                    stroke={PART_COLOR["Armor"].border}
-                    strokeWidth={equippedConfigs["Armor"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Armor"] ? "0.75" : "0.18"}
-                  />
+                  {/* SWORD behind (decorative) */}
+                  <g opacity="0.45">
+                    <line x1="30" y1="320" x2="95" y2="106" stroke="rgba(185,190,228,0.70)" strokeWidth="2.5" strokeLinecap="round"/>
+                    <polygon points="95,106 90,93 100,93" fill="rgba(200,200,238,0.72)"/>
+                    <rect x="14" y="297" width="32" height="6" rx="3" fill="rgba(185,140,50,0.68)" transform="rotate(-62,30,300)"/>
+                  </g>
 
-                  {/* TORSO / ARMOR */}
-                  <rect x="28" y="70" width="64" height="74" rx="6"
-                    fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}30` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Armor"].border}
-                    strokeWidth={equippedConfigs["Armor"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Armor"] ? "0.95" : "0.22"}
-                    filter={equippedConfigs["Armor"] ? "url(#rpgGlow)" : undefined}
-                  />
-                  <line x1="60" y1="76" x2="60" y2="134" stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(148,163,184,0.10)"} strokeWidth="1" strokeOpacity="0.45"/>
-                  <path d="M 42 92 Q 60 100 78 92" stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(148,163,184,0.10)"} strokeWidth="1" strokeOpacity="0.45" fill="none"/>
+                  {/* ══ HELM ══ */}
+                  <g filter={equippedConfigs["Helm"] ? "url(#rpgGlow)" : undefined}>
+                    {/* Plume / crest */}
+                    <path d="M 90,6 C 88,0 84,2 83,8 L 86,18 L 90,14 L 94,18 L 97,8 C 96,2 92,0 90,6 Z"
+                      fill={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(155,135,75,0.30)"} strokeWidth="0"/>
+                    {/* Helmet dome */}
+                    <path d="M 90,10 L 68,18 L 60,34 L 62,50 L 70,58 L 90,62 L 110,58 L 118,50 L 120,34 L 112,18 Z"
+                      fill={equippedConfigs["Helm"] ? `${PART_COLOR["Helm"].border}38` : "rgba(135,115,68,0.13)"}
+                      stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(158,138,78,0.34)"}
+                      strokeWidth={equippedConfigs["Helm"] ? "1.8" : "1"}/>
+                    {/* Visor plate */}
+                    <path d="M 68,36 L 112,36 L 112,54 L 90,59 L 68,54 Z"
+                      fill={equippedConfigs["Helm"] ? `${PART_COLOR["Helm"].border}22` : "rgba(75,58,18,0.19)"}
+                      stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(138,118,58,0.23)"}
+                      strokeWidth="0.9"/>
+                    {/* Eye slit */}
+                    <line x1="70" y1="43" x2="110" y2="43"
+                      stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(138,118,58,0.30)"}
+                      strokeWidth={equippedConfigs["Helm"] ? "1.8" : "0.9"}/>
+                    {/* Chin guard */}
+                    <path d="M 72,54 L 90,60 L 108,54 L 108,62 L 90,68 L 72,62 Z"
+                      fill={equippedConfigs["Helm"] ? `${PART_COLOR["Helm"].border}20` : "rgba(95,78,38,0.11)"}
+                      stroke={equippedConfigs["Helm"] ? PART_COLOR["Helm"].border : "rgba(128,108,58,0.21)"}
+                      strokeWidth="0.9"/>
+                  </g>
 
-                  {/* LEFT ARM / GLOVES */}
-                  <rect x="12" y="68" width="16" height="54" rx="5"
-                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}30` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Gloves"].border}
-                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
-                    filter={equippedConfigs["Gloves"] ? "url(#rpgGlow)" : undefined}
-                  />
-                  <rect x="8" y="122" width="20" height="22" rx="4"
-                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}40` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Gloves"].border}
-                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
-                  />
+                  {/* Neck */}
+                  <rect x="82" y="62" width="16" height="11" rx="2"
+                    fill="rgba(95,78,38,0.16)" stroke="rgba(138,118,58,0.23)" strokeWidth="0.8"/>
 
-                  {/* RIGHT ARM / GLOVES */}
-                  <rect x="92" y="68" width="16" height="54" rx="5"
-                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}30` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Gloves"].border}
-                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
-                  />
-                  <rect x="92" y="122" width="20" height="22" rx="4"
-                    fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}40` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Gloves"].border}
-                    strokeWidth={equippedConfigs["Gloves"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Gloves"] ? "0.95" : "0.22"}
-                  />
+                  {/* ══ ARMOR — Pauldrons + Breastplate + Faulds ══ */}
+                  <g filter={equippedConfigs["Armor"] ? "url(#rpgGlow)" : undefined}>
+                    {/* Left pauldron layers */}
+                    <ellipse cx="53" cy="82" rx="24" ry="14" transform="rotate(-14,53,82)"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}32` : "rgba(138,118,68,0.12)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(158,138,78,0.28)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.6" : "0.9"}/>
+                    <ellipse cx="47" cy="96" rx="17" ry="9" transform="rotate(-8,47,96)"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}22` : "rgba(118,98,58,0.09)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(138,118,58,0.21)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.2" : "0.7"}/>
+                    {/* Right pauldron layers */}
+                    <ellipse cx="127" cy="82" rx="24" ry="14" transform="rotate(14,127,82)"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}32` : "rgba(138,118,68,0.12)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(158,138,78,0.28)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.6" : "0.9"}/>
+                    <ellipse cx="133" cy="96" rx="17" ry="9" transform="rotate(8,133,96)"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}22` : "rgba(118,98,58,0.09)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(138,118,58,0.21)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.2" : "0.7"}/>
+                    {/* Breastplate */}
+                    <path d="M 68,70 L 56,80 L 53,108 L 56,134 L 68,144 L 90,147 L 112,144 L 124,134 L 127,108 L 124,80 L 112,70 Z"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}30` : "rgba(138,118,68,0.13)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(158,138,78,0.29)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.8" : "1"}/>
+                    {/* Sternum + pectoral detail */}
+                    <line x1="90" y1="74" x2="90" y2="140"
+                      stroke={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}70` : "rgba(138,118,58,0.17)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.2" : "0.7"}/>
+                    <path d="M 62,96 Q 90,106 118,96" fill="none"
+                      stroke={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}65` : "rgba(138,118,58,0.15)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.1" : "0.6"}/>
+                    {/* Faulds */}
+                    <path d="M 60,144 L 52,156 L 58,170 L 90,174 L 122,170 L 128,156 L 120,144 Z"
+                      fill={equippedConfigs["Armor"] ? `${PART_COLOR["Armor"].border}25` : "rgba(118,98,58,0.10)"}
+                      stroke={equippedConfigs["Armor"] ? PART_COLOR["Armor"].border : "rgba(138,118,58,0.23)"}
+                      strokeWidth={equippedConfigs["Armor"] ? "1.3" : "0.8"}/>
+                  </g>
 
-                  {/* WAIST / BELT */}
-                  <rect x="30" y="144" width="60" height="14" rx="4"
-                    fill="rgba(148,163,184,0.07)" stroke="rgba(148,163,184,0.16)" strokeWidth="0.8"/>
+                  {/* ══ GLOVES — Arms + Gauntlets ══ */}
+                  <g filter={equippedConfigs["Gloves"] ? "url(#softGlow)" : undefined}>
+                    {/* Left upper arm (double stroke = outer border + inner fill) */}
+                    <path d="M 53,88 L 33,100 L 25,120 L 29,142 L 42,152" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "11" : "10"} strokeLinecap="round"/>
+                    <path d="M 53,88 L 33,100 L 25,120 L 29,142 L 42,152" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}48` : "rgba(88,68,28,0.13)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "8" : "7"} strokeLinecap="round"/>
+                    {/* Left vambrace */}
+                    <path d="M 42,152 L 32,168 L 28,185 L 35,197 L 50,201" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "10" : "9"} strokeLinecap="round"/>
+                    <path d="M 42,152 L 32,168 L 28,185 L 35,197 L 50,201" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}48` : "rgba(88,68,28,0.13)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "7" : "6"} strokeLinecap="round"/>
+                    {/* Left gauntlet */}
+                    <ellipse cx="50" cy="203" rx="12" ry="9"
+                      fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}44` : "rgba(128,108,62,0.13)"}
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "1.6" : "0.9"}/>
+                    {/* Right upper arm */}
+                    <path d="M 127,88 L 147,100 L 155,120 L 151,142 L 138,152" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "11" : "10"} strokeLinecap="round"/>
+                    <path d="M 127,88 L 147,100 L 155,120 L 151,142 L 138,152" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}48` : "rgba(88,68,28,0.13)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "8" : "7"} strokeLinecap="round"/>
+                    {/* Right vambrace */}
+                    <path d="M 138,152 L 148,168 L 152,185 L 145,197 L 130,201" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "10" : "9"} strokeLinecap="round"/>
+                    <path d="M 138,152 L 148,168 L 152,185 L 145,197 L 130,201" fill="none"
+                      stroke={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}48` : "rgba(88,68,28,0.13)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "7" : "6"} strokeLinecap="round"/>
+                    {/* Right gauntlet */}
+                    <ellipse cx="130" cy="203" rx="12" ry="9"
+                      fill={equippedConfigs["Gloves"] ? `${PART_COLOR["Gloves"].border}44` : "rgba(128,108,62,0.13)"}
+                      stroke={equippedConfigs["Gloves"] ? PART_COLOR["Gloves"].border : "rgba(148,128,72,0.27)"}
+                      strokeWidth={equippedConfigs["Gloves"] ? "1.6" : "0.9"}/>
+                  </g>
 
-                  {/* LEFT LEG / SHOES */}
-                  <rect x="32" y="158" width="22" height="76" rx="5"
-                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Shoes"].border}
-                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Shoes"] ? "0.9" : "0.22"}
-                    filter={equippedConfigs["Shoes"] ? "url(#rpgGlow)" : undefined}
-                  />
-                  <rect x="26" y="230" width="30" height="16" rx="4"
-                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}40` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Shoes"].border}
-                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Shoes"] ? "0.95" : "0.22"}
-                  />
+                  {/* ══ SHOES — Thighs + Greaves + Sabatons ══ */}
+                  <g filter={equippedConfigs["Shoes"] ? "url(#softGlow)" : undefined}>
+                    {/* Left thigh */}
+                    <path d="M 66,172 L 60,178 L 58,212 L 62,238 L 76,242 L 86,239 L 88,210 L 86,178 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(128,108,62,0.11)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.23)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                    {/* Right thigh */}
+                    <path d="M 114,172 L 120,178 L 122,212 L 118,238 L 104,242 L 94,239 L 92,210 L 94,178 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(128,108,62,0.11)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.23)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                    {/* Knee guards */}
+                    <ellipse cx="74" cy="240" rx="13" ry="9"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}36` : "rgba(138,118,68,0.11)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.23)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.4" : "0.8"}/>
+                    <ellipse cx="106" cy="240" rx="13" ry="9"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}36` : "rgba(138,118,68,0.11)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.23)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.4" : "0.8"}/>
+                    {/* Left greave */}
+                    <path d="M 62,242 L 57,250 L 56,284 L 62,298 L 76,300 L 84,298 L 86,284 L 85,250 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}32` : "rgba(128,108,62,0.12)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.25)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                    {/* Right greave */}
+                    <path d="M 118,242 L 123,250 L 124,284 L 118,298 L 104,300 L 96,298 L 94,284 L 95,250 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}32` : "rgba(128,108,62,0.12)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.25)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                    {/* Left sabaton */}
+                    <path d="M 54,296 L 48,306 L 50,316 L 84,319 L 88,315 L 85,300 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}42` : "rgba(118,98,54,0.13)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.26)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                    {/* Right sabaton */}
+                    <path d="M 126,296 L 132,306 L 130,316 L 96,319 L 92,315 L 95,300 Z"
+                      fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}42` : "rgba(118,98,54,0.13)"}
+                      stroke={equippedConfigs["Shoes"] ? PART_COLOR["Shoes"].border : "rgba(148,128,72,0.26)"}
+                      strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}/>
+                  </g>
 
-                  {/* RIGHT LEG / SHOES */}
-                  <rect x="66" y="158" width="22" height="76" rx="5"
-                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}28` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Shoes"].border}
-                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Shoes"] ? "0.9" : "0.22"}
-                  />
-                  <rect x="64" y="230" width="30" height="16" rx="4"
-                    fill={equippedConfigs["Shoes"] ? `${PART_COLOR["Shoes"].border}40` : "rgba(148,163,184,0.08)"}
-                    stroke={PART_COLOR["Shoes"].border}
-                    strokeWidth={equippedConfigs["Shoes"] ? "1.5" : "0.8"}
-                    strokeOpacity={equippedConfigs["Shoes"] ? "0.95" : "0.22"}
-                  />
+                  {/* Sword foreground held in right gauntlet */}
+                  <g opacity={equippedConfigs["Gloves"] ? "0.78" : "0.32"}>
+                    <line x1="130" y1="203" x2="44" y2="321" stroke="rgba(200,205,242,0.78)" strokeWidth="2.2" strokeLinecap="round"/>
+                    <polygon points="44,321 40,309 48,309" fill="rgba(200,205,242,0.70)"/>
+                    <rect x="96" y="233" width="28" height="5" rx="2.5" fill="rgba(185,148,55,0.75)" transform="rotate(-53,110,235)"/>
+                  </g>
                 </svg>
               </div>
 
@@ -2063,7 +2153,16 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 20,
     fontFamily: "system-ui",
     color: "#f0e2c0",
-    background: "radial-gradient(1400px 700px at 25% -5%, rgba(185,130,40,0.18) 0%, transparent 55%), radial-gradient(800px 500px at 80% 90%, rgba(140,80,20,0.10) 0%, transparent 60%), #0d0a06",
+    background: [
+      /* dark vignette: heavy black corners, transparent center */
+      "radial-gradient(ellipse 68% 62% at 50% 44%, transparent 0%, transparent 32%, rgba(0,0,0,0.88) 100%)",
+      /* amber torch glow: top-center warm bloom */
+      "radial-gradient(ellipse 75% 48% at 50% 18%, rgba(185,130,40,0.26) 0%, rgba(145,90,20,0.10) 45%, transparent 68%)",
+      /* secondary warm glow: lower-right embers */
+      "radial-gradient(ellipse 42% 35% at 80% 88%, rgba(155,85,18,0.15) 0%, transparent 70%)",
+      /* base parchment-black */
+      "#0d0a06",
+    ].join(", "),
     minHeight: "100vh",
   },
   header: {
@@ -2705,7 +2804,10 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     padding: "5px 10px 5px 8px",
     borderRadius: 8,
-    border: "1px solid rgba(185,148,55,0.18)",
+    borderTop: "1px solid rgba(185,148,55,0.18)",
+    borderRight: "1px solid rgba(185,148,55,0.18)",
+    borderBottom: "1px solid rgba(185,148,55,0.18)",
+    borderLeft: "3px solid rgba(185,148,55,0.18)",
     background: "rgba(18,11,3,0.55)",
     fontSize: 12,
     whiteSpace: "nowrap",
