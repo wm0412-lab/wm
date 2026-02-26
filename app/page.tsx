@@ -295,9 +295,9 @@ const PRESET_CONFIGS: ArmorConfig[] = (() => {
     { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "MaxHpVary"],          passive2: ["HealAmpVaryper"],         specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
     { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "AttackVary"],         passive2: ["PVEDamageUpVaryper"],     specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
     // ── 3T 드랍(Boss) Active 특수효과 ────────────────────────────────────
-    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["SkillCooldownAccVary"],                    passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "곤의 유산(3초간 무적)" },
-    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary"],                              passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "물러서기(도약 후 이속 증가)" },
-    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["SkillCooldownAccVary"],                    passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "정신집중(마력 회복)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["SkillCooldownAccVary", "DamageUpVaryper"],  passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "곤의 유산(3초간 무적)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "CriDamageVaryper"],           passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "물러서기(도약 후 이속 증가)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["SkillCooldownAccVary", "AttackVary"],       passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "정신집중(마력 회복)" },
   ];
   return defs.map((d) => {
     const baseId = keyToBaseId({ tier: d.tier, acquire: d.acquire, material: d.material, part: d.part });
