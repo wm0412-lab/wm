@@ -116,25 +116,31 @@ const STATMODS: StatMod[] = Object.keys(STATMOD_LABEL) as StatMod[];
 
 /** 특수효과 풀 */
 const SPECIAL_EFFECT_POOL: string[] = [
-  "피격 시 체력 회복 (Proc Passive)",
-  "피격 시 방어력 증가 (Proc Passive)",
-  "피격 시 이동속도 증가 (Proc Passive)",
-  "적 처치 시 체력 회복 (Proc Passive)",
-  "공격 시 공격속도 증가 (Proc Passive)",
-  "공격 시 공격력 증가 (Proc Passive)",
-  "공격 시 스킬 가속 증가 (Proc Passive)",
-  "스킬 공격 시 마나 회복 (Proc Passive)",
-  "기절 시 방어막 생성 (Proc Passive)",
-  "내 체력이 50% 미만이면 체력 자연회복량 증가 (Proc Passive)",
-  "내 체력이 30% 미만이면 공격력 증가 (Proc Passive)",
-  "피격 시 치명타 확률 증가 (Proc Passive)",
-  "적 처치 시 치명타피해 증가 (Proc Passive)",
-  "공격 시 체력 회복 (Proc Passive)",
-  "내 체력이 100%일 경우 치명타확률 증가 (Proc Passive)",
-  "적 처치 시 마나 회복 (Proc Passive)",
-  "즉시 실드 생성 (Active)",
-  "즉시 체력 회복 (Active)",
-  "짧은 시간 공격속도 증가 (Active)",
+  // 1T Proc Passive
+  "피격 시 체력 회복 (1T)",
+  "일반 공격 시 방어력 증가 (1T)",
+  "적 처치 시 체력 회복 (1T)",
+  "피격 시 이동속도 증가 (1T)",
+  "피격 시 공격력 증가 (1T)",
+  "일반 공격 시 치명타 확률 증가 (1T)",
+  "적 처치 시 공격 속도 증가 (1T)",
+  "피격 시 마나 소모량 감소 (1T)",
+  "일반 공격 시 스킬 가속 증가 (1T)",
+  "적 처치 시 마나 회복 (1T)",
+  // 2T Proc Passive
+  "공격 시 체력 회복 (2T)",
+  "내 체력이 50% 미만일 경우 피해량 증가 (2T)",
+  "공격 시 공격속도 증가 (2T)",
+  "내 체력이 30% 미만일 경우 공격력 증가 (2T)",
+  "공격 시 스킬 가속 증가 (2T)",
+  "내 체력이 100%일 경우 치명타확률 증가 (2T)",
+  "기절 시 방어막 생성 (2T)",
+  "적 처치 시 치명타피해 증가 (2T)",
+  "적 처치 시 마나 회복 (2T)",
+  // Active
+  "곤의 유산(3초간 무적)",
+  "물러서기(도약 후 이속 증가)",
+  "정신집중(마력 회복)",
 ];
 
 /**
@@ -200,6 +206,105 @@ function getVerFromUniqueId(uniqueId: string) {
   const parts = uniqueId.split("|h");
   return parts[1] ? parts[1].slice(0, 6) : "";
 }
+
+/** ===== Preset Configs (from design sheet B16:H91) ===== */
+const PRESET_CONFIGS: ArmorConfig[] = (() => {
+  type Def = {
+    tier: Tier; acquire: Acquire; material: Material; part: Part;
+    passive1: StatMod[]; passive2: StatMod[];
+    specialType: SpecialType; specialEffect: string;
+  };
+  const defs: Def[] = [
+    // ── 1T 기본제작 ──────────────────────────────────────────────────────
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper"],                        passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 체력 회복 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Helm",   passive1: ["RegenHpVary"],                              passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 방어력 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary"],                                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 체력 회복 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Shoes",  passive1: ["DefenseVary"],                              passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Armor",  passive1: ["MaxHpVary"],                                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 공격력 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Helm",   passive1: ["CriVaryper"],                               passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 치명타 확률 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper"],                          passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 공격 속도 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Shoes",  passive1: ["AttackVary"],                               passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary"],                                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 마나 소모량 감소 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary"],                              passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 스킬 가속 증가 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Gloves", passive1: ["AttackVary"],                               passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (1T)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper"],                        passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    // ── 2T 전리품제작 ─────────────────────────────────────────────────────
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "MaxHpVary"],                 passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 방어력 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "CriVaryper"],                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 방어력 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "MaxHpVary"],                  passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 치명타 확률 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "AttackVary"],                 passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 치명타 확률 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "MaxHpVary"],                 passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 스킬 가속 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "CostMpDownVaryper"],         passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "일반 공격 시 스킬 가속 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "DamageDownVaryper"],           passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 체력 회복 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "SkillCooldownAccVary"],  passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 공격 속도 증가 (1T)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "CostMpDownVaryper"],          passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (1T)" },
+    // ── 2T 던전코어 ──────────────────────────────────────────────────────
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "AtkSpeedVaryper"],            passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 체력 회복 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "CriDamageVaryper"],     passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 공격 속도 증가 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "SkillCooldownAccVary"],      passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 체력 회복 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "CriVaryper"],         passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 체력 회복 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "SkillCooldownAccVary"],       passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 공격력 증가 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "CriDamageVaryper"],           passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 공격력 증가 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "RegenMpVary"],                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 마나 소모량 감소 (1T)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "CriVaryper"],                 passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 마나 소모량 감소 (1T)" },
+    // ── 2T 드랍(Boss) ─────────────────────────────────────────────────────
+    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "RegenHpVary"],              passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "SkillCooldownAccVary"],     passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "MaxHpVary"],                 passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "CriVaryper"],                passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "MaxHpVary"],          passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "AttackVary"],         passive2: [],                        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    // ── 3T 전리품제작 ─────────────────────────────────────────────────────
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "CriVaryper"],               passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "공격 시 체력 회복 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: ["DefenseVary"],            specialType: "PROC_PASSIVE", specialEffect: "내 체력이 50% 미만일 경우 피해량 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "MaxHpVary"],                 passive2: ["DamageDownVaryper"],      specialType: "PROC_PASSIVE", specialEffect: "공격 시 공격속도 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "SkillCooldownAccVary"],       passive2: ["PVEDamageUpVaryper"],     specialType: "PROC_PASSIVE", specialEffect: "내 체력이 30% 미만일 경우 공격력 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "MaxHpVary"],                passive2: ["DamageDownVaryper"],      specialType: "PROC_PASSIVE", specialEffect: "공격 시 스킬 가속 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "RegenMpVary"],                passive2: ["HealAmpVaryper"],         specialType: "PROC_PASSIVE", specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "DamageDownVaryper"],          passive2: ["HealAcceptVary"],         specialType: "PROC_PASSIVE", specialEffect: "기절 시 방어막 생성 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "DefenseVary"],                passive2: ["SCNegativeRecoveryVary"], specialType: "PROC_PASSIVE", specialEffect: "기절 시 방어막 생성 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "SkillCooldownAccVary"], passive2: ["PVEDamageUpVaryper"],     specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 치명타피해 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "CriVaryper"],           passive2: ["MaxHpVary"],              specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 치명타피해 증가 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "CostMpDownVaryper"],         passive2: ["MaxHpVary"],              specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (2T)" },
+    { tier: 3, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Gloves", passive1: ["SkillCooldownAccVary", "CostMpDownVaryper"], passive2: ["HealAmpVaryper"],       specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (2T)" },
+    // ── 3T 던전코어 ──────────────────────────────────────────────────────
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Plate",   part: "Helm",   passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "공격 시 체력 회복 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "SkillCooldownAccVary"], passive2: ["AtkSpeedVaryper"],      specialType: "PROC_PASSIVE", specialEffect: "내 체력이 50% 미만일 경우 피해량 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Leather", part: "Helm",   passive1: ["CriVaryper", "CriDamageVaryper"],          passive2: ["AtkSpeedVaryper"],        specialType: "PROC_PASSIVE", specialEffect: "공격 시 공격속도 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "CriVaryper"],                 passive2: ["AttackVary"],             specialType: "PROC_PASSIVE", specialEffect: "내 체력이 30% 미만일 경우 공격력 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "SkillCooldownAccVary"],     passive2: ["AtkSpeedVaryper"],        specialType: "PROC_PASSIVE", specialEffect: "공격 시 스킬 가속 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["AttackVary", "CriVaryper"],                passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "AtkSpeedVaryper"],            passive2: ["CriVaryper"],             specialType: "PROC_PASSIVE", specialEffect: "기절 시 방어막 생성 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "CriDamageVaryper"],     passive2: ["DamageUpVaryper"],        specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 치명타피해 증가 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "SkillCooldownAccVary"],      passive2: ["CriVaryper"],             specialType: "PROC_PASSIVE", specialEffect: "적 처치 시 마나 회복 (2T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Plate",   part: "Shoes",  passive1: ["DamageDownVaryper", "SkillCooldownAccVary"], passive2: ["DamageUpVaryper"],      specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Leather", part: "Shoes",  passive1: ["CriVaryper", "CriDamageVaryper"],          passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Shoes",  passive1: ["AttackVary", "CriVaryper"],                passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    // ── 3T 드랍(Boss) ─────────────────────────────────────────────────────
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "MaxHpVary"],                passive2: ["SCNegativeRecoveryVary"], specialType: "PROC_PASSIVE", specialEffect: "공격 시 체력 회복 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "CriVaryper"],         passive2: ["CriDamageVaryper"],       specialType: "PROC_PASSIVE", specialEffect: "내 체력이 50% 미만일 경우 피해량 증가 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Helm",   passive1: ["CriVaryper", "AttackVary"],                passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "공격 시 공격속도 증가 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "CriDamageVaryper"],           passive2: ["AttackVary"],             specialType: "PROC_PASSIVE", specialEffect: "내 체력이 30% 미만일 경우 공격력 증가 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "CostMpDownVaryper"],        passive2: ["HealAmpVaryper"],         specialType: "PROC_PASSIVE", specialEffect: "공격 시 스킬 가속 증가 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "CriVaryper"],                 passive2: ["SkillCooldownAccVary"],   specialType: "PROC_PASSIVE", specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (2T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "RegenHpVary"],              passive2: ["MaxHpVary"],              specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "SkillCooldownAccVary"],     passive2: ["PVEDamageUpVaryper"],     specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "MaxHpVary"],                 passive2: ["DamageDownVaryper"],      specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "CriVaryper"],                passive2: ["AtkSpeedVaryper"],        specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "MaxHpVary"],          passive2: ["HealAmpVaryper"],         specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "AttackVary"],         passive2: ["PVEDamageUpVaryper"],     specialType: "PROC_PASSIVE", specialEffect: "피격 시 이동속도 증가 (1T)" },
+    // ── 3T 드랍(Boss) Active 특수효과 ────────────────────────────────────
+    { tier: 3, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["SkillCooldownAccVary"],                    passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "곤의 유산(3초간 무적)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary"],                              passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "물러서기(도약 후 이속 증가)" },
+    { tier: 3, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["SkillCooldownAccVary"],                    passive2: ["AtkSpeedVaryper"],        specialType: "ACTIVE",       specialEffect: "정신집중(마력 회복)" },
+  ];
+  return defs.map((d) => {
+    const baseId = keyToBaseId({ tier: d.tier, acquire: d.acquire, material: d.material, part: d.part });
+    const id = makeUniqueId(baseId, { passive1: d.passive1, passive2: d.passive2, specialType: d.specialType, specialEffect: d.specialEffect });
+    return { ...d, id };
+  });
+})();
 
 /** ===== Export/Import helpers ===== */
 function downloadJson(filename: string, data: unknown) {
@@ -276,16 +381,16 @@ function sanitizeConfig(raw: any): ArmorConfig | null {
 
 /** ===== Color Tags ===== */
 const MATERIAL_COLOR: Record<Material, { bg: string; fg: string; border: string }> = {
-  Plate: { bg: "rgba(59,130,246,0.18)", fg: "#93c5fd", border: "rgba(59,130,246,0.85)" },
-  Leather: { bg: "rgba(245,158,11,0.18)", fg: "#fcd34d", border: "rgba(245,158,11,0.85)" },
-  Cloth: { bg: "rgba(168,85,247,0.18)", fg: "#d8b4fe", border: "rgba(168,85,247,0.85)" },
+  Plate:   { bg: "rgba(59,130,246,0.12)",  fg: "#93c5fd", border: "rgba(59,130,246,0.55)"  },
+  Leather: { bg: "rgba(245,158,11,0.12)",  fg: "#fcd34d", border: "rgba(245,158,11,0.55)" },
+  Cloth:   { bg: "rgba(168,85,247,0.12)",  fg: "#d8b4fe", border: "rgba(168,85,247,0.55)" },
 };
 
 const PART_COLOR: Record<Part, { bg: string; fg: string; border: string }> = {
-  Armor: { bg: "rgba(16,185,129,0.18)", fg: "#6ee7b7", border: "rgba(16,185,129,0.85)" },
-  Helm: { bg: "rgba(236,72,153,0.18)", fg: "#f9a8d4", border: "rgba(236,72,153,0.85)" },
-  Gloves: { bg: "rgba(239,68,68,0.18)", fg: "#fca5a5", border: "rgba(239,68,68,0.85)" },
-  Shoes: { bg: "rgba(14,165,233,0.18)", fg: "#7dd3fc", border: "rgba(14,165,233,0.85)" },
+  Armor:  { bg: "rgba(16,185,129,0.12)",  fg: "#6ee7b7", border: "rgba(16,185,129,0.55)"  },
+  Helm:   { bg: "rgba(236,72,153,0.12)",  fg: "#f9a8d4", border: "rgba(236,72,153,0.55)"  },
+  Gloves: { bg: "rgba(239,68,68,0.12)",   fg: "#fca5a5", border: "rgba(239,68,68,0.55)"   },
+  Shoes:  { bg: "rgba(14,165,233,0.12)",  fg: "#7dd3fc", border: "rgba(14,165,233,0.55)"  },
 };
 
 type Equipped = Record<Part, string | null>; // part -> uniqueId
@@ -337,15 +442,36 @@ export default function Page() {
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        // 저장 데이터 없으면 프리셋으로 초기화
+        const nextStore: Record<string, ArmorConfig> = {};
+        const nextIds = new Set<string>();
+        for (const cfg of PRESET_CONFIGS) {
+          nextStore[cfg.id] = cfg;
+          nextIds.add(cfg.id);
+        }
+        setStore(nextStore);
+        setSavedIds(nextIds);
+        return;
+      }
       const parsed = JSON.parse(raw) as {
         store: Record<string, ArmorConfig>;
         savedIds: string[];
         equipped?: Equipped;
       };
-      if (parsed?.store && Array.isArray(parsed?.savedIds)) {
+      if (parsed?.store && Array.isArray(parsed?.savedIds) && parsed.savedIds.length > 0) {
         setStore(parsed.store);
         setSavedIds(new Set(parsed.savedIds));
+      } else {
+        // savedIds가 비어있으면 프리셋으로 초기화
+        const nextStore: Record<string, ArmorConfig> = {};
+        const nextIds = new Set<string>();
+        for (const cfg of PRESET_CONFIGS) {
+          nextStore[cfg.id] = cfg;
+          nextIds.add(cfg.id);
+        }
+        setStore(nextStore);
+        setSavedIds(nextIds);
       }
       if (parsed?.equipped) setEquipped(parsed.equipped);
     } catch {
@@ -480,11 +606,17 @@ export default function Page() {
   }
 
   function resetAllSaved() {
-    setStore({});
-    setSavedIds(new Set());
+    const nextStore: Record<string, ArmorConfig> = {};
+    const nextIds = new Set<string>();
+    for (const cfg of PRESET_CONFIGS) {
+      nextStore[cfg.id] = cfg;
+      nextIds.add(cfg.id);
+    }
+    setStore(nextStore);
+    setSavedIds(nextIds);
     setConfirmReset(false);
     setEquipped({ Armor: null, Helm: null, Gloves: null, Shoes: null });
-    showToast("저장된 방어구 정보를 모두 초기화했어!");
+    showToast("프리셋으로 초기화했어!");
   }
 
   function deleteRow(uniqueId: string) {
@@ -2062,8 +2194,8 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     padding: 20,
     fontFamily: "system-ui",
-    color: "#f0e2c0",
-    background: "radial-gradient(1400px 700px at 25% -5%, rgba(185,130,40,0.18) 0%, transparent 55%), radial-gradient(800px 500px at 80% 90%, rgba(140,80,20,0.10) 0%, transparent 60%), #0d0a06",
+    color: "#e2e8f0",
+    background: "#111318",
     minHeight: "100vh",
   },
   header: {
@@ -2074,27 +2206,27 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
     marginBottom: 14,
   },
-  h1: { fontSize: 24, fontWeight: 950, letterSpacing: -0.2, color: "#e8c87a" },
-  sub: { marginTop: 6, opacity: 0.75, lineHeight: 1.4, color: "#d4b88a" },
+  h1: { fontSize: 24, fontWeight: 700, letterSpacing: -0.2, color: "#f1f5f9" },
+  sub: { marginTop: 6, lineHeight: 1.4, color: "#64748b" },
 
   toast: {
     position: "fixed",
     right: 18,
     bottom: 18,
-    padding: "10px 12px",
-    borderRadius: 14,
-    border: "1px solid rgba(185,148,55,0.40)",
-    background: "rgba(18,11,3,0.95)",
-    color: "#f0e2c0",
-    fontWeight: 900,
+    padding: "10px 16px",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "#1e2230",
+    color: "#f1f5f9",
+    fontWeight: 600,
     zIndex: 50,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(185,148,55,0.08) inset",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
   },
 
   modalBackdrop: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.62)",
+    background: "rgba(0,0,0,0.60)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -2103,21 +2235,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   modal: {
     width: "min(560px, 100%)",
-    borderRadius: 18,
-    border: "1px solid rgba(185,148,55,0.35)",
-    background: "rgba(16,10,3,0.97)",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.09)",
+    background: "#1a1d27",
     padding: 16,
-    boxShadow: "0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(185,148,55,0.06) inset",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
   },
 
   card: {
-    borderRadius: 16,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(22,13,4,0.72)",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#1a1d27",
     padding: 16,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(185,148,55,0.07)",
   },
-  cardTitle: { fontWeight: 900, marginBottom: 12, color: "#e8c87a" },
+  cardTitle: { fontWeight: 600, marginBottom: 12, color: "#f1f5f9" },
 
   grid4: {
     display: "grid",
@@ -2127,20 +2258,20 @@ const styles: Record<string, React.CSSProperties> = {
 
   select: {
     width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(12,7,2,0.65)",
-    color: "#f0e2c0",
+    padding: "9px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.09)",
+    background: "#0f1117",
+    color: "#e2e8f0",
     outline: "none",
   },
   input: {
     width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(12,7,2,0.65)",
-    color: "#f0e2c0",
+    padding: "9px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.09)",
+    background: "#0f1117",
+    color: "#e2e8f0",
     outline: "none",
   },
 
@@ -2153,102 +2284,102 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   panel: {
-    borderRadius: 16,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(22,13,4,0.72)",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#1a1d27",
     padding: 16,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(185,148,55,0.07)",
     minWidth: 0,
   },
-  panelTitle: { fontWeight: 950, marginBottom: 8, color: "#e8c87a" },
+  panelTitle: { fontWeight: 600, marginBottom: 8, color: "#f1f5f9" },
 
   pool: {
     display: "grid",
     gridTemplateColumns: "1fr",
-    gap: 8,
+    gap: 6,
     maxHeight: 260,
     overflow: "auto",
     paddingRight: 4,
   },
   poolItem: {
-    borderRadius: 12,
-    border: "1px solid rgba(185,148,55,0.22)",
-    background: "rgba(20,12,3,0.55)",
-    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#0f1117",
+    padding: "9px 12px",
     cursor: "grab",
-    fontWeight: 800,
-    lineHeight: 1.25,
+    fontWeight: 400,
+    lineHeight: 1.4,
     whiteSpace: "normal",
     wordBreak: "break-word",
-    color: "#d4c49a",
+    color: "#cbd5e1",
+    fontSize: 13,
   },
-  hint: { marginTop: 10, opacity: 0.75, fontSize: 13, lineHeight: 1.5 },
+  hint: { marginTop: 10, fontSize: 12, lineHeight: 1.5, color: "#475569" },
 
   btn: {
-    padding: "10px 12px",
-    borderRadius: 14,
-    border: "1px solid rgba(185,148,55,0.55)",
-    background: "rgba(185,148,55,0.12)",
-    color: "#f0e2c0",
+    padding: "9px 14px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.13)",
+    background: "rgba(255,255,255,0.06)",
+    color: "#e2e8f0",
     cursor: "pointer",
-    fontWeight: 900,
+    fontWeight: 500,
   },
   btnSecondary: {
-    padding: "10px 12px",
-    borderRadius: 14,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(12,7,2,0.45)",
-    color: "#d4c49a",
+    padding: "9px 14px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "transparent",
+    color: "#64748b",
     cursor: "pointer",
-    fontWeight: 900,
+    fontWeight: 500,
   },
   btnDanger: {
-    padding: "10px 12px",
-    borderRadius: 14,
-    border: "1px solid rgba(251,113,133,0.45)",
-    background: "rgba(251,113,133,0.10)",
-    color: "#fecdd3",
+    padding: "9px 14px",
+    borderRadius: 8,
+    border: "1px solid rgba(248,113,113,0.30)",
+    background: "rgba(248,113,113,0.07)",
+    color: "#fca5a5",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 500,
   },
 
   chip: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 10,
-    padding: "8px 10px",
+    gap: 8,
+    padding: "6px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(18,11,3,0.55)",
-    color: "#f0e2c0",
-    fontWeight: 850,
+    border: "1px solid rgba(255,255,255,0.09)",
+    background: "#0f1117",
+    color: "#e2e8f0",
+    fontWeight: 400,
     maxWidth: "100%",
   },
   miniChip: {
     display: "inline-flex",
     alignItems: "center",
-    padding: "6px 8px",
+    padding: "5px 8px",
     borderRadius: 999,
-    border: "1px solid rgba(185,148,55,0.22)",
-    background: "rgba(18,11,3,0.50)",
-    color: "#e8d5b0",
-    fontWeight: 800,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "#0f1117",
+    color: "#cbd5e1",
+    fontWeight: 400,
     fontSize: 12,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
     maxWidth: "100%",
     whiteSpace: "normal",
     wordBreak: "break-word",
   },
   chipX: {
-    border: "1px solid rgba(148,163,184,0.25)",
-    background: "rgba(15,23,42,0.35)",
-    color: "#e5e7eb",
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.06)",
+    color: "#64748b",
     borderRadius: 999,
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     cursor: "pointer",
-    fontWeight: 900,
-    lineHeight: "22px",
+    fontWeight: 500,
+    lineHeight: "20px",
   },
 
   filters: {
@@ -2260,9 +2391,9 @@ const styles: Record<string, React.CSSProperties> = {
 
   tableWrap: {
     overflow: "auto",
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.26)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#0f1117",
   },
   table: {
     width: "100%",
@@ -2272,36 +2403,38 @@ const styles: Record<string, React.CSSProperties> = {
   },
   th: {
     textAlign: "left",
-    padding: "10px 10px",
+    padding: "10px 12px",
     fontSize: 12,
-    opacity: 0.85,
-    borderBottom: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.55)",
+    fontWeight: 500,
+    color: "#475569",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    background: "#13151f",
     position: "sticky",
     top: 0,
     zIndex: 2,
   },
   td: {
-    padding: "10px 10px",
+    padding: "10px 12px",
     fontSize: 13,
-    borderBottom: "1px solid rgba(148,163,184,0.12)",
+    borderBottom: "1px solid rgba(255,255,255,0.04)",
     verticalAlign: "top",
+    color: "#cbd5e1",
   },
   trActive: {
-    outline: "1px solid rgba(52,211,153,0.45)",
-    background: "rgba(52,211,153,0.06)",
+    outline: "1px solid rgba(74,222,128,0.28)",
+    background: "rgba(74,222,128,0.04)",
   },
   trSameCell: {
-    outline: "1px solid rgba(148,163,184,0.20)",
-    background: "rgba(148,163,184,0.04)",
+    outline: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.02)",
   },
   link: {
     background: "transparent",
     border: "none",
     padding: 0,
-    color: "#93c5fd",
+    color: "#60a5fa",
     cursor: "pointer",
-    fontWeight: 900,
+    fontWeight: 500,
     textDecoration: "underline",
   },
 
@@ -2314,28 +2447,28 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   fullBtn: {
-    padding: "8px 12px",
+    padding: "7px 12px",
     borderRadius: 999,
-    border: "1px solid rgba(226,232,240,0.55)",
-    background: "rgba(226,232,240,0.12)",
-    color: "#e2e8f0",
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.05)",
+    color: "#64748b",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 500,
     fontSize: 12,
   },
 
   boardWrap: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.26)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#0f1117",
     padding: 10,
     overflow: "auto",
   },
 
   boardTier: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.16)",
-    background: "rgba(2,6,23,0.32)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.06)",
+    background: "#13151f",
     padding: 10,
   },
   boardTierHeader: {
@@ -2348,18 +2481,18 @@ const styles: Record<string, React.CSSProperties> = {
   boardTierBody: { display: "grid", gridTemplateColumns: "1fr", gap: 10 },
 
   boardAcquire: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.14)",
-    background: "rgba(15,23,42,0.25)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.05)",
+    background: "#1a1d27",
     padding: 10,
   },
-  boardAcquireHeader: { fontWeight: 950, marginBottom: 10, opacity: 0.9 },
+  boardAcquireHeader: { fontWeight: 600, marginBottom: 10, color: "#64748b", fontSize: 13 },
 
   boardMaterials: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 },
   boardMaterial: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.14)",
-    background: "rgba(2,6,23,0.25)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.05)",
+    background: "#0f1117",
     padding: 10,
     minWidth: 0,
   },
@@ -2367,91 +2500,90 @@ const styles: Record<string, React.CSSProperties> = {
   boardParts: { display: "grid", gridTemplateColumns: "1fr", gap: 10 },
 
   nodeStack: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.14)",
-    background: "rgba(2,6,23,0.18)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.05)",
+    background: "#13151f",
     padding: 10,
   },
 
   nodeCard: {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(2,6,23,0.38)",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#1a1d27",
     padding: 10,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.22)",
-    marginTop: 10,
+    marginTop: 8,
   },
-  nodeCardActive: { outline: "1px solid rgba(52,211,153,0.45)", background: "rgba(52,211,153,0.06)" },
+  nodeCardActive: { outline: "1px solid rgba(74,222,128,0.30)", background: "rgba(74,222,128,0.04)" },
 
   verPill: {
-    padding: "6px 10px",
+    padding: "4px 8px",
     borderRadius: 999,
-    border: "1px solid rgba(185,148,55,0.28)",
-    background: "rgba(18,11,3,0.55)",
-    color: "#d4c49a",
-    fontWeight: 950,
-    fontSize: 12,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "#475569",
+    fontWeight: 500,
+    fontSize: 11,
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    opacity: 0.9,
     whiteSpace: "nowrap",
   },
 
-  nodeHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10 },
+  nodeHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8 },
   nodeBtn: {
-    padding: "6px 10px",
+    padding: "5px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(148,163,184,0.28)",
-    background: "rgba(2,6,23,0.22)",
-    color: "#cbd5e1",
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.04)",
+    color: "#64748b",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 500,
     fontSize: 12,
     whiteSpace: "nowrap",
   },
   nodeBtnActive: {
-    border: "1px solid rgba(52,211,153,0.45)",
-    background: "rgba(52,211,153,0.14)",
-    color: "#e2e8f0",
+    border: "1px solid rgba(74,222,128,0.30)",
+    background: "rgba(74,222,128,0.08)",
+    color: "#86efac",
   },
   nodeBtnDanger: {
-    padding: "6px 10px",
+    padding: "5px 10px",
     borderRadius: 999,
-    border: "1px solid rgba(251,113,133,0.38)",
-    background: "rgba(251,113,133,0.10)",
-    color: "#fecdd3",
+    border: "1px solid rgba(248,113,113,0.28)",
+    background: "rgba(248,113,113,0.06)",
+    color: "#fca5a5",
     cursor: "pointer",
-    fontWeight: 950,
+    fontWeight: 500,
     fontSize: 12,
     whiteSpace: "nowrap",
   },
   nodeBody: { display: "flex", flexDirection: "column", gap: 4 },
-  nodeSectionTitle: { fontSize: 12, fontWeight: 950, opacity: 0.85, marginTop: 2 },
+  nodeSectionTitle: { fontSize: 12, fontWeight: 500, color: "#475569", marginTop: 2 },
   specialBox: {
     marginTop: 2,
-    padding: "8px 10px",
-    borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.18)",
-    background: "rgba(15,23,42,0.30)",
+    padding: "7px 10px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.06)",
+    background: "rgba(255,255,255,0.02)",
     fontSize: 12,
-    lineHeight: 1.35,
+    lineHeight: 1.4,
     whiteSpace: "normal",
     wordBreak: "break-word",
+    color: "#64748b",
   },
 
   fullBackdrop: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.72)",
+    background: "rgba(0,0,0,0.70)",
     zIndex: 80,
     padding: 16,
   },
   fullModal: {
     height: "100%",
     width: "100%",
-    borderRadius: 18,
-    border: "1px solid rgba(148,163,184,0.20)",
-    background: "rgba(2,6,23,0.92)",
-    boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#0f1117",
+    boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
     padding: 14,
     overflow: "hidden",
   },
