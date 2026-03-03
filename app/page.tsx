@@ -48,7 +48,7 @@ type ArmorConfig = ArmorKey & {
 
 type ViewMode = "TABLE" | "BOARD";
 
-const STORAGE_KEY = "armor_effect_distribution_store_v7";
+const STORAGE_KEY = "armor_effect_distribution_store_v8";
 
 /** ===== Labels ===== */
 const ACQUIRE_LABEL: Record<Acquire, string> = {
@@ -129,8 +129,20 @@ const SPECIAL_EFFECT_POOL: string[] = [
   "적 처치 시 마나 회복 (Proc)",
 ];
 
-/** SR 효과 풀 (Active) */
+/** SR 효과 풀 (1T/2T: Proc, 3T: Active) */
 const SR_EFFECT_POOL: string[] = [
+  // Proc - 1T/2T SR
+  "피격 시 체력 회복 (Proc)",
+  "일반 공격 시 방어력 증가 (Proc)",
+  "적 처치 시 체력 회복 (Proc)",
+  "피격 시 이동속도 증가 (Proc)",
+  "피격 시 공격력 증가 (Proc)",
+  "일반 공격 시 치명타 확률 증가 (Proc)",
+  "적 처치 시 공격 속도 증가 (Proc)",
+  "내 체력이 100%일 경우 치명타확률 증가 (Proc)",
+  "일반 공격 시 스킬 가속 증가 (Proc)",
+  "적 처치 시 마나 회복 (Proc)",
+  // Active - 3T SR
   "곤의 유산(3초간 무적) (Active)",
   "물러서기(도약 후 이속 증가) (Active)",
   "박치기 (타겟팅 리프) (Active)",
@@ -210,47 +222,48 @@ const PRESET_CONFIGS: ArmorConfig[] = (() => {
     specialType: SpecialType; specialEffect: string; srEffect: string;
   };
   const P = "PROC_PASSIVE" as const;
+  const N = "NONE" as const;
   const defs: Def[] = [
     // ── 1T 기본제작 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper"],                        passive2: [],                        specialType: P, specialEffect: "피격 시 체력 회복 (Proc)",                    srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Helm",   passive1: ["RegenHpVary"],                              passive2: [],                        specialType: P, specialEffect: "일반 공격 시 방어력 증가 (Proc)",              srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary"],                                passive2: [],                        specialType: P, specialEffect: "적 처치 시 체력 회복 (Proc)",                  srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Shoes",  passive1: ["DefenseVary"],                              passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Armor",  passive1: ["MaxHpVary"],                                passive2: [],                        specialType: P, specialEffect: "피격 시 공격력 증가 (Proc)",                   srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Helm",   passive1: ["CriVaryper"],                               passive2: [],                        specialType: P, specialEffect: "일반 공격 시 치명타 확률 증가 (Proc)",         srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper"],                          passive2: [],                        specialType: P, specialEffect: "적 처치 시 공격 속도 증가 (Proc)",             srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Shoes",  passive1: ["AttackVary"],                               passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary"],                                passive2: [],                        specialType: P, specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)", srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary"],                              passive2: [],                        specialType: P, specialEffect: "일반 공격 시 스킬 가속 증가 (Proc)",           srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Gloves", passive1: ["AttackVary"],                               passive2: [],                        specialType: P, specialEffect: "적 처치 시 마나 회복 (Proc)",                  srEffect: "" },
-    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper"],                        passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper"],                        passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 체력 회복 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Helm",   passive1: ["RegenHpVary"],                              passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 방어력 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary"],                                passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 체력 회복 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Plate",   part: "Shoes",  passive1: ["DefenseVary"],                              passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Armor",  passive1: ["MaxHpVary"],                                passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 공격력 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Helm",   passive1: ["CriVaryper"],                               passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 치명타 확률 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper"],                          passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 공격 속도 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Leather", part: "Shoes",  passive1: ["AttackVary"],                               passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary"],                                passive2: [],                        specialType: N, specialEffect: "", srEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary"],                              passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 스킬 가속 증가 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Gloves", passive1: ["AttackVary"],                               passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 마나 회복 (Proc)" },
+    { tier: 1, acquire: "BASIC_CRAFT", material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper"],                        passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
     // ── 2T 전리품제작 ────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "MaxHpVary"],                 passive2: [],                        specialType: P, specialEffect: "일반 공격 시 방어력 증가 (Proc)",              srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "CriVaryper"],                passive2: [],                        specialType: P, specialEffect: "일반 공격 시 방어력 증가 (Proc)",              srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "MaxHpVary"],                  passive2: [],                        specialType: P, specialEffect: "일반 공격 시 치명타 확률 증가 (Proc)",         srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "AttackVary"],                 passive2: [],                        specialType: P, specialEffect: "일반 공격 시 치명타 확률 증가 (Proc)",         srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "MaxHpVary"],                 passive2: [],                        specialType: P, specialEffect: "일반 공격 시 스킬 가속 증가 (Proc)",           srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "CostMpDownVaryper"],         passive2: [],                        specialType: P, specialEffect: "일반 공격 시 스킬 가속 증가 (Proc)",           srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "DamageDownVaryper"],           passive2: [],                        specialType: P, specialEffect: "적 처치 시 체력 회복 (Proc)",                  srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "SkillCooldownAccVary"],  passive2: [],                        specialType: P, specialEffect: "적 처치 시 공격 속도 증가 (Proc)",             srEffect: "" },
-    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "CostMpDownVaryper"],          passive2: [],                        specialType: P, specialEffect: "적 처치 시 마나 회복 (Proc)",                  srEffect: "" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "MaxHpVary"],                 passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 방어력 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "CriVaryper"],                passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 방어력 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "MaxHpVary"],                  passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 치명타 확률 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Helm",   passive1: ["CriVaryper", "AttackVary"],                 passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 치명타 확률 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "MaxHpVary"],                 passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 스킬 가속 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Helm",   passive1: ["RegenMpVary", "CostMpDownVaryper"],         passive2: [],                        specialType: N, specialEffect: "", srEffect: "일반 공격 시 스킬 가속 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "DamageDownVaryper"],           passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 체력 회복 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "SkillCooldownAccVary"],  passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 공격 속도 증가 (Proc)" },
+    { tier: 2, acquire: "LOOT_CRAFT",  material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "CostMpDownVaryper"],          passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 마나 회복 (Proc)" },
     // ── 2T 던전코어 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "AtkSpeedVaryper"],            passive2: [],                        specialType: P, specialEffect: "적 처치 시 체력 회복 (Proc)",                  srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "CriDamageVaryper"],     passive2: [],                        specialType: P, specialEffect: "적 처치 시 공격 속도 증가 (Proc)",             srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "SkillCooldownAccVary"],      passive2: [],                        specialType: P, specialEffect: "적 처치 시 마나 회복 (Proc)",                  srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: [],                        specialType: P, specialEffect: "피격 시 체력 회복 (Proc)",                     srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "CriVaryper"],         passive2: [],                        specialType: P, specialEffect: "피격 시 체력 회복 (Proc)",                     srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "SkillCooldownAccVary"],       passive2: [],                        specialType: P, specialEffect: "피격 시 공격력 증가 (Proc)",                   srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "CriDamageVaryper"],           passive2: [],                        specialType: P, specialEffect: "피격 시 공격력 증가 (Proc)",                   srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "RegenMpVary"],                passive2: [],                        specialType: P, specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)", srEffect: "" },
-    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "CriVaryper"],                 passive2: [],                        specialType: P, specialEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)", srEffect: "" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Gloves", passive1: ["MaxHpVary", "AtkSpeedVaryper"],            passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 체력 회복 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Gloves", passive1: ["AtkSpeedVaryper", "CriDamageVaryper"],     passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 공격 속도 증가 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Gloves", passive1: ["AttackVary", "SkillCooldownAccVary"],      passive2: [],                        specialType: N, specialEffect: "", srEffect: "적 처치 시 마나 회복 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 체력 회복 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "CriVaryper"],         passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 체력 회복 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "SkillCooldownAccVary"],       passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 공격력 증가 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Leather", part: "Armor",  passive1: ["MaxHpVary", "CriDamageVaryper"],           passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 공격력 증가 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "RegenMpVary"],                passive2: [],                        specialType: N, specialEffect: "", srEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)" },
+    { tier: 2, acquire: "DUNGEON_CORE", material: "Cloth",   part: "Armor",  passive1: ["MaxMpVary", "CriVaryper"],                 passive2: [],                        specialType: N, specialEffect: "", srEffect: "내 체력이 100%일 경우 치명타확률 증가 (Proc)" },
     // ── 2T 드랍(Boss) ────────────────────────────────────────────────────────────────────────────────────────────────────────────
-    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "RegenHpVary"],               passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "SkillCooldownAccVary"],      passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "MaxHpVary"],                  passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "CriVaryper"],                 passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "MaxHpVary"],           passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
-    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "AttackVary"],          passive2: [],                        specialType: P, specialEffect: "피격 시 이동속도 증가 (Proc)",                 srEffect: "" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "RegenHpVary"],               passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Plate",   part: "Shoes",  passive1: ["DefenseVary", "SkillCooldownAccVary"],      passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "MaxHpVary"],                  passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Leather", part: "Shoes",  passive1: ["AttackVary", "CriVaryper"],                 passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "MaxHpVary"],           passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
+    { tier: 2, acquire: "BOSS_DROP",   material: "Cloth",   part: "Shoes",  passive1: ["CostMpDownVaryper", "AttackVary"],          passive2: [],                        specialType: N, specialEffect: "", srEffect: "피격 시 이동속도 증가 (Proc)" },
     // ── 3T 전리품제작 ────────────────────────────────────────────────────────────────────────────────────────────────────────────
     { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Helm",   passive1: ["RegenHpVary", "CriVaryper"],               passive2: ["SkillCooldownAccVary"],   specialType: P, specialEffect: "일반 공격 시 방어력 증가 (Proc)",              srEffect: "박치기 (타겟팅 리프) (Active)" },
     { tier: 3, acquire: "LOOT_CRAFT",  material: "Plate",   part: "Armor",  passive1: ["DamageDownVaryper", "MaxHpVary"],          passive2: ["DefenseVary"],            specialType: P, specialEffect: "피격 시 체력 회복 (Proc)",                     srEffect: "곤의 유산(3초간 무적) (Active)" },
@@ -582,7 +595,7 @@ export default function Page() {
 
   function dropSR(e: React.DragEvent) {
     e.preventDefault();
-    const eff = e.dataTransfer.getData("text/sreffect");
+    const eff = e.dataTransfer.getData("text/sreffect") || e.dataTransfer.getData("text/special");
     if (!eff) return;
     setDraft((prev) => ({ ...prev, srEffect: eff }));
   }
@@ -900,7 +913,10 @@ export default function Page() {
       for (const s of cfg.passive2) add(statMap, STATMOD_LABEL[s]);
 
       if (cfg.specialType === "PROC_PASSIVE" && cfg.specialEffect.trim()) add(procMap, cfg.specialEffect.trim());
-      if (cfg.srEffect?.trim()) add(activeMap, cfg.srEffect.trim());
+      if (cfg.srEffect?.trim()) {
+        if (cfg.srEffect.includes("(Proc)")) add(procMap, cfg.srEffect.trim());
+        else add(activeMap, cfg.srEffect.trim());
+      }
     }
 
     const toList = (map: Map<string, number>) =>
@@ -1895,7 +1911,7 @@ export default function Page() {
             ))}
           </div>
 
-          <div style={{ marginTop: 14, ...styles.panelTitle }}>SR 효과 풀 (Active)</div>
+          <div style={{ marginTop: 14, ...styles.panelTitle }}>SR 효과 풀 (1T/2T: Proc · 3T: Active)</div>
           <div style={styles.pool}>
             {SR_EFFECT_POOL.map((eff) => (
               <div key={eff} draggable onDragStart={(e) => onDragStartSR(e, eff)} title={eff} style={{ ...styles.poolItem, borderColor: "rgba(167,139,250,0.45)", color: "#c4b5fd" }}>
